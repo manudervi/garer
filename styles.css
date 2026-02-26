@@ -460,3 +460,15 @@ body{ overflow-x:hidden; }
 }
 
 }
+/* mettila in fondo al CSS */
+@media (max-width: 900px){
+  .slide{ overflow: clip; }     /* taglia le bgOrb fuori schermo */
+  #deck{ overflow-x: hidden; }  /* blocca trascinamento dentro il container */
+}
+@media (max-width: 900px){
+  .slide{
+    min-height: 100svh;
+    padding: calc(var(--navH, 92px) + env(safe-area-inset-top, 0px)) 0 28px;
+    align-items: flex-start; /* così non “centra” e non taglia sotto */
+  }
+}
