@@ -78,10 +78,15 @@
           Quindi, così com’è, quei due anchor non trovano una destinazione reale.
   -->
   <aside id="drawer" class="drawer" aria-hidden="true">
-    <a href="#gallery">Gallery</a>
-    <a href="#faq">FAQ</a>
-    <a href="#contatti">Contatti</a>
-    <a class="drawer__cta" href="/">Biglietti</a>
+      <a href="#deck" onclick="document.querySelector('#deck').scrollTo({top: innerHeight*1, behavior:'smooth'})">Gallery</a>
+        <!-- Va alla pagina faq -->
+        <a href="#deck" onclick="document.querySelector('#deck').scrollTo({top: innerHeight*2, behavior:'smooth'})">FAQ</a>
+        <!--
+          Contatti: scrolla a innerHeight*4 = “vai alla slide 5”.
+          Se l’altezza di una slide non coincide con innerHeight, questo offset potrebbe risultare impreciso.
+        -->
+        <a href="#deck" onclick="document.querySelector('#deck').scrollTo({top: innerHeight*3, behavior:'smooth'})">Contatti</a>
+
   </aside>
 
   <!--
