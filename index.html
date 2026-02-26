@@ -81,7 +81,7 @@
     <a href="#gallery">Gallery</a>
     <a href="#faq">FAQ</a>
     <a href="#contatti">Contatti</a>
-    <a class="drawer__cta" href="">Biglietti</a>
+    <a class="drawer__cta" href="/">Biglietti</a>
   </aside>
 
   <!--
@@ -403,6 +403,16 @@
   window.addEventListener('load', () => {
     renderFAQ();
   });
+  function setNavHeightVar(){
+  const nav = document.querySelector(".nav");
+  if(!nav) return;
+  document.documentElement.style.setProperty("--navH", `${nav.offsetHeight}px`);
+  }
+
+  window.addEventListener("load", setNavHeightVar);
+  window.addEventListener("resize", setNavHeightVar);
+  window.addEventListener("orientationchange", setNavHeightVar);
+
 </script>
 
 <script src="app.js"></script>

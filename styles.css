@@ -429,3 +429,16 @@ body{ overflow-x:hidden; }
   color: var(--muted);
   line-height: 1.45;
 }
+:root{
+  --navH: 92px; /* fallback */
+}
+
+/* header fixed: rispetta safe area (notch) */
+.nav{
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* le slide partono sotto la navbar reale + safe area */
+.slide{
+  padding-top: calc(var(--navH) + env(safe-area-inset-top, 0px));
+}
