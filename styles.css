@@ -442,3 +442,13 @@ body{ overflow-x:hidden; }
 .slide{
   padding-top: calc(var(--navH) + env(safe-area-inset-top, 0px));
 }
+@media (max-width: 900px){
+  html, body{
+    position: relative;
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  /* se le orb/decori causano overflow */
+  .slide{ overflow: clip; } /* oppure hidden */
+}
