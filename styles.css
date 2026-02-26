@@ -472,3 +472,20 @@ body{ overflow-x:hidden; }
     align-items: flex-start; /* così non “centra” e non taglia sotto */
   }
 }
+@media (max-width: 900px){
+  /* queste 2 slide possono scorrere dentro, così vedi anche il fondo */
+  .slide--tall{
+    align-items: flex-start;        /* non centrare verticalmente */
+    overflow-y: auto;               /* scroll interno */
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 28px;           /* aria sotto */
+  }
+
+  /* opzionale: per evitare che la card tocchi il bordo in alto */
+  .slide--tall .slide__inner{
+    padding-top: 8px;
+  }
+}
+@media (max-width: 900px){
+  #deck{ scroll-snap-type: y proximity; }
+}
