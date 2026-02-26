@@ -450,5 +450,13 @@ body{ overflow-x:hidden; }
   }
 
   /* se le orb/decori causano overflow */
-  .slide{ overflow: clip; } /* oppure hidden */
+  .slide{
+  min-height: 100svh;        /* invece di height fissa */
+  scroll-snap-align: start;
+  padding: calc(var(--navH, 92px) + env(safe-area-inset-top, 0px)) 0 48px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 }
