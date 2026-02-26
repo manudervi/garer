@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Evento — GARER</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="evento">
+  <header class="nav">
+    <div class="container nav__inner">
+      <a class="brand" href="index.html">
+        <span class="brand__mark" aria-hidden="true"></span><span>GARER</span>
+      </a>
+      <nav class="nav__links">
+        <a href="eventi.html">Eventi</a>
+        <a href="index.html#faq">FAQ</a>
+        <a href="index.html#contatti">Contatti</a>
+      </nav>
+      <div class="nav__cta">
+        <a class="btn btn--primary" href="#tickets">Prenota</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="drip" aria-hidden="true"></div>
+
+    <section class="hero">
+      <div class="container hero__grid">
+        <div class="card">
+          <div class="card__pad">
+            <div class="poster" style="margin:14px 0 0">
+                <img data-event-poster src="assets/sample_evento.jpg" alt="Locandina evento">
+            </div>
+
+            <h1 class="h1" data-event-title>Evento</h1>
+            <p class="lead" data-event-meta></p>
+            <p class="lead" data-event-desc></p>
+
+            <div class="hr"></div>
+            <div class="grid3">
+              <div class="card"><div class="card__pad"><b>Dresscode:</b> black/purple (opzionale)</div></div>
+              <div class="card"><div class="card__pad"><b>Età:</b> definire (16+/18+)</div></div>
+              <div class="card"><div class="card__pad"><b>Ingresso:</b> QR + documento</div></div>
+            </div>
+
+            <div class="section" style="padding:18px 0 0">
+              <h2>Location</h2>
+              <div class="card"><div class="card__pad">
+                Indirizzo da definire • Qui puoi integrare una mappa.
+              </div></div>
+            </div>
+
+            <div class="section" style="padding:18px 0 0">
+              <h2>Regole</h2>
+              <div class="card"><div class="card__pad">
+                Policy ingresso, rimborsi e sicurezza (testo da inserire).
+              </div></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tickets" class="ticketBox">
+          <div class="card">
+            <div class="card__pad">
+              <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px">
+                <h2 style="margin:0">Biglietti</h2>
+                <small data-event-fromprice></small>
+              </div>
+
+              <div class="field">
+                <label for="ticketType"><small>Tipo ticket</small></label>
+                <select id="ticketType">
+                  <option value="early">Early</option>
+                  <option value="standard" selected>Standard</option>
+                  <option value="vip">VIP</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="qty"><small>Quantità</small></label>
+                <select id="qty">
+                  <option>1</option><option>2</option><option>3</option><option>4</option>
+                </select>
+              </div>
+
+              <div class="hr"></div>
+
+              <div style="display:flex; justify-content:space-between; font-weight:900">
+                <span>Totale</span>
+                <span data-total>€ 0</span>
+              </div>
+
+              <div style="margin-top:12px; display:grid; gap:10px">
+                <button class="btn btn--primary" id="buyBtn" type="button">Acquista ora</button>
+                <a class="btn btn--ghost" href="index.html#contatti">Serve aiuto? Contattaci</a>
+              </div>
+
+              <small style="display:block; margin-top:10px">
+                Pagamento via Stripe Checkout (redirect). Ricevi conferma dopo il pagamento. 
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">© GARER — Privacy & Cookie • Termini</div>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

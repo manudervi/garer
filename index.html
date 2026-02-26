@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <!--
+    HEAD = metadati della pagina (non visibili).
+    - charset: encoding UTF-8
+    - viewport: layout mobile-first
+    - title: titolo scheda browser
+    - stylesheet: collega il CSS
+  -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GARER — Trap nights</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <!--
+    HEADER / NAVBAR (desktop):
+    - Logo (link alla home)
+    - Link di navigazione (Eventi / Gallery / Contatti)
+    - CTA “Biglietti”
+    Nota: i link "Gallery" e "Contatti" qui non cambiano pagina: fanno scroll DENTRO #deck usando scrollTo().
+  -->
+  <header class="nav">
+    <div class="container nav__inner">
+      <!-- Brand: cliccando torna a index.html -->
+      <a class="brand" href="index.html">
+        <!-- Wrapper logo (serve a controllare dimensioni/posizionamento via CSS) -->
+        <div class="heroLogoWrap">
+          <img class="heroLogo" src="assets/garer_logo_1.png" alt="GARER logo" />
+        </div>
+      </a>
+
+      <!-- Link navbar (desktop) -->
+      <nav class="nav__links">
+
+        <!--
+          Gallery: scrolla il contenitore #deck (non la window).
+          top: innerHeight*3 = “vai alla slide 4” (0-based: slide1=0, slide2=1, slide3=2, slide4=3).
+          behavior:'smooth' abilita lo scroll fluido.
+        -->
+        <a href="#deck" onclick="document.querySelector('#deck').scrollTo({top: innerHeight*1, behavior:'smooth'})">Gallery</a>
+        <!-- Va alla pagina faq -->
+        <a href="#deck" onclick="document.querySelector('#deck').scrollTo({top: innerHeight*2, behavior:'smooth'})">FAQ</a>
+        <!--
+          Contatti: scrolla a innerHeight*4 = “vai alla slide 5”.
+          Se l’altezza di una slide non coincide con innerHeight, questo offset potrebbe risultare impreciso.
+        -->
+        <a href="#deck" onclick="document.querySelector('#deck').scrollTo({top: innerHeight*3, behavior:'smooth'})">Contatti</a>
+
+      </nav>
+        
+
+      <!-- CTA a destra -->
+      <div class="nav__cta">
+        <a class="btn btn--primary" href="/">Biglietti</a>
+      </div>
+    </div>
+  </header>
+
+  <!--
+    BURGER BUTTON (mobile):
+    - apre/chiude il drawer (#drawer)
+    - aria-controls: indica quale elemento controlla
+    - aria-expanded: stato aperto/chiuso del menu (va aggiornato via JS quando toggli)
+  -->
+  <button class="burger" aria-label="Apri menu" aria-controls="drawer" aria-expanded="false">
+    <!-- Le 3 linee del burger (di solito stilizzate via CSS) -->
+    <span></span><span></span><span></span>
+  </button>
+
+  <!--
+    DRAWER (menu laterale mobile):
+    - È un pannello off-canvas che appare quando il burger è attivo.
+    - aria-hidden: dovrebbe essere "true" quando chiuso e "false" quando aperto (gestito da JS).
+    Nota: qui i link puntano a #gallery e #contatti, ma nel markup NON esistono id="gallery"/id="contatti".
+          Quindi, così com’è, quei due anchor non trovano una destinazione reale.
+  -->
+  <aside id="drawer" class="drawer" aria-hidden="true">
+    <a href="eventi.html">Eventi</a>
+    <a href="#gallery">Gallery</a>
+    <a href="#contatti">Contatti</a>
+    <a class="drawer__cta" href="eventi.html">Biglietti</a>
+  </aside>
+
+  <!--
+    BACKDROP:
+    - overlay scuro dietro al drawer
+    - data-close-drawer: “hook” per JS (cliccando qui chiudi il drawer)
+  -->
+  <div class="backdrop" data-close-drawer></div>
+
+  <!--
+    MAIN “DECK”:
+    - è il contenitore scrollabile delle “slide”
+    - id="deck": serve per selezionarlo da JS (scrollTo e altre logiche)
+    - class "noScrollbars": tipicamente nasconde le scrollbar via CSS
+  -->
+  <main id="deck" class="deck noScrollbars">
+
+    <!-- =========================
+      SLIDE 1 — HERO
+      - headline + descrizione + CTA
+      - poster/immagine a destra
+    ========================== -->
+    <section class="slide">
+      <!-- Overlay noise/texture (solo estetica) -->
+      <div class="noise" aria-hidden="true"></div>
+      <!-- Orb/shape di sfondo (solo estetica, posizionata inline) -->
+      <div class="bgOrb" style="right:-160px; top:90px" aria-hidden="true"></div>
+
+      <!--
+        slide__inner:
+        - layout interno della slide (di solito grid a 2 colonne: testo + visual)
+      -->
+      <div class="slide__inner">
+
+        <!-- Colonna sinistra: testo e CTA -->
+        <div class="pptFX">
+          <!-- Drip decoration: barra + 3 “gocce” con delay animazioni -->
+          <div class="dripBar" style="width:140px; position:relative">
+            <span class="dripBlob" style="left:12px; top:10px"></span>
+            <span class="dripBlob" style="left:52px; top:10px; animation-delay:.6s"></span>
+            <span class="dripBlob" style="left:98px; top:10px; animation-delay:1.1s"></span>
+          </div>
+
+          <!-- Titolo principale -->
+          <h1 class="h1" style="margin-top:14px">
+            PROSSIMA DATA GARER
+          </h1>
+
+          <!-- Sottotitolo/descrizione -->
+          <p class="lead">
+            <h2>LOADING...</h2>
+          </p>
+
+          <!-- CTA principali -->
+          <div style="display:flex; gap:10px; flex-wrap:wrap">
+            <a class="btn btn--primary" href="https://chat.whatsapp.com/JvbMyrgzRMY821vF3Wt4Uu">Vedi evento</a>
+          </div>
+
+          <!-- Separatore visivo -->
+          <div class="hr"></div>
+
+        </div>
+
+        <!-- Colonna destra: poster/visual -->
+        <div class="pptFX">
+          <!--
+            Poster:
+            - immagine di esempio (placeholder)
+            - da sostituire con asset reale (logo / locandina)
+          -->
+          <div class="poster">
+            <img src="assets/sample_evento.jpeg" alt="Logo GARER cup drip" />
+
+      </div>
+    </section>
+
+    <!-- =========================
+      SLIDE 2 — “VIBE”
+      - card testo a sinistra
+      - immagine/locandina a destra
+    ========================== -->
+    <section class="slide">
+  <div class="noise" aria-hidden="true"></div>
+  <div class="bgOrb" style="left:-170px; top:160px; opacity:.6" aria-hidden="true"></div>
+
+  <div class="slide__inner">
+    <!-- Card testo (pannello con padding) - SINISTRA -->
+    <div class="pptFX card">
+      <div class="card__pad">
+        <h1 class="h1" style="margin-top:14px">
+          FLASHBACK GALLERIA
+        </h1>
+        <div class="hr"></div>
+      <!--
+        <div style="display:grid; gap:10px">
+          <div class="card" style="box-shadow:none"><div class="card__pad">Gocce viola + elementi 3D "slime".</div></div>
+          <div class="card" style="box-shadow:none"><div class="card__pad">Flash photography / dark mood.</div></div>
+          <div class="card" style="box-shadow:none"><div class="card__pad">CTA sempre chiara: "Dettagli e prenotazioni".</div></div>
+        </div>
+      -->
+        <div id="last3Events" style="display:grid; gap:10px"></div>
+
+      </div>
+    </div>
+
+    <!-- Collage foto - DESTRA (direttamente dentro slide__inner) -->
+    <div class="pptFX sideCollage card">
+      <img src="assets/festino/f1.JPG" alt="">
+      <img src="assets/festino/f2.JPG" alt="">
+      <img src="assets/festino/f3.JPG" alt="">
+      <img src="assets/festino/f4.JPG" alt="">
+      <img src="assets/festino/f5.JPG" alt="">
+      <img src="assets/festino/f6.JPG" alt="">
+      <img src="assets/festino/f7.JPG" alt="">
+      <img src="assets/festino/f8.JPG" alt="">
+      <img src="assets/festino/f9.JPG" alt="">
+      <img src="assets/festino/f10.JPG" alt="">
+      <img src="assets/festino/f11.JPG" alt="">
+      <img src="assets/festino/f12.JPG" alt="">
+    </div>
+  </div>
+</section>
+
+    <!-- =========================
+      SLIDE 4 — FAQ
+      - solo FAQ
+    ========================== -->
+    <section class="slide">
+      <div class="noise" aria-hidden="true"></div>
+      <div class="bgOrb" style="right:-190px; top:220px; opacity:.55" aria-hidden="true"></div>
+
+      <div class="slide__inner" style="grid-template-columns:1fr">
+        <div class="pptFX card">
+          <div class="card__pad">
+            <h2 style="margin:0 0 10px">FAQ</h2>
+            <small>Età minima, documenti, rimborsi, dresscode…</small>
+            <div class="hr"></div>
+
+            <!-- Questo è L'UNICO faqBox -->
+            <div id="faqBox" class="faq"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =========================
+      SLIDE 5 — CONTATTI
+      - CTA (WhatsApp/IG nel testo, ma i link vanno ancora messi)
+      - poster/visual a destra
+    ========================== -->
+    <section class="slide">
+      <div class="noise" aria-hidden="true"></div>
+
+      <div class="slide__inner">
+        <!-- Card contatti + CTA -->
+        <div class="pptFX card">
+          <div class="card__pad">
+            <h2 style="margin:0 0 10px">Contatti</h2>
+            <p class="lead" style="margin:0 0 12px">
+              WhatsApp + Instagram per supporto prenotazioni.
+            </p>
+
+            <!-- CTA finali (al momento entrambe puntano a eventi.html) -->
+            <div style="display:flex; gap:10px; flex-wrap:wrap">
+              <a class="btn btn--primary" href="https://wa.me/+393385881663">Dettagli e prenotazioni</a>
+            </div>
+
+            <div class="hr"></div>
+
+            <!-- Footer note (placeholder legali) -->
+            <small>© GARER — Privacy/Cookie/Termini (da inserire).</small>
+          </div>
+        </div>
+
+        <!-- Visual finale -->
+        <div class="pptFX">
+          <div class="poster">
+            <img src="assets/garer_garer.png" alt="Visual GARER" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!--
+    Script JS:
+    - gestisce drawer (burger/backdrop), popolamento eventi (data-event-grid),
+      e qualsiasi animazione/interazione.
+  -->
+<script>
+  // --- Utils date ---
+  function parseDDMMYY(s) {
+    // "21/02/26" -> Date(2026, 1, 21)
+    const [dd, mm, yy] = s.split('/').map(Number);
+    return new Date(2000 + yy, mm - 1, dd);
+  }
+
+  // --- Utils drive image (da /file/d/ID/view -> thumbnail) ---
+  function extractDriveFileId(url) {
+    const m = String(url).match(/\/file\/d\/([^/]+)/);
+    return m ? m[1] : null;
+  }
+
+  function driveToImgSrc(url, width = 1200) {
+    const id = extractDriveFileId(url);
+    // Se non riesco a estrarre l'id, provo comunque ad usare l'url originale
+    return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w${width}` : url;
+  }
+
+  // --- Collage sizing (2 colonne fisse) ---
+  function fixCollageRows() {
+    const collage = document.querySelector('.sideCollage');
+    if (!collage) return;
+
+    const imgs = collage.querySelectorAll('img');
+    if (imgs.length === 0) return;
+
+    const cols = 2;
+    const rows = Math.ceil(imgs.length / cols);
+    const gap = 10;      // deve matchare il tuo CSS gap
+    const padding = 24;  // 12 top + 12 bottom (match padding del collage)
+
+    const availableHeight = collage.clientHeight - padding - (rows - 1) * gap;
+    const rowHeight = availableHeight / rows;
+
+    collage.style.setProperty('--rowH', `${rowHeight}px`);
+  }
+
+  async function renderSlide2FromJson() {
+    const res = await fetch('festini.json');
+    const data = await res.json(); // parse JSON [web:79][web:149]
+
+    // Array eventi
+    const events = Object.entries(data).map(([nome, info]) => ({
+      nome,
+      dateObj: parseDDMMYY(info.date),
+      link: info.link,
+      foto: Array.isArray(info.foto_evidenza) ? info.foto_evidenza : []
+    }));
+
+    // Ordina: più recente prima
+    events.sort((a, b) => b.dateObj - a.dateObj);
+
+    // Ultimi 3 (o meno)
+    const top3 = events.slice(0, 3);
+
+    // SINISTRA: titoli cliccabili
+    const boxTitles = document.querySelector('#last3Events');
+    if (boxTitles) {
+      boxTitles.innerHTML = top3.map(e => `
+        <a class="card" style="box-shadow:none"
+           href="${e.link}" target="_blank" rel="noopener">
+          <div class="card__pad">${e.nome}</div>
+        </a>
+      `).join('');
+    }
+
+    // DESTRA: foto evidenza (di quei top3), cliccabili -> cartella festino
+    const collage = document.querySelector('.sideCollage');
+    if (collage) {
+      const photos = top3.flatMap(e =>
+        e.foto.map(url => ({
+          imgSrc: driveToImgSrc(url, 1200),
+          eventLink: e.link
+        }))
+      );
+
+      if (photos.length === 0) {
+        collage.innerHTML = `
+          <div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--muted)">
+            Nessuna foto evidenza
+          </div>`;
+      } else {
+        collage.innerHTML = photos.map(p => `
+          <a href="${p.eventLink}" target="_blank" rel="noopener" style="display:block">
+            <img src="${p.imgSrc}" alt="">
+          </a>
+        `).join('');
+
+        // quando le immagini hanno finito di caricare, ricalcola (più affidabile)
+        const imgs = collage.querySelectorAll('img');
+        let pending = imgs.length;
+        imgs.forEach(img => {
+          const done = () => { if (--pending <= 0) fixCollageRows(); };
+          img.addEventListener('load', done);
+          img.addEventListener('error', done);
+        });
+
+        // fallback immediato
+        fixCollageRows();
+      }
+    }
+  }
+
+  window.addEventListener('load', () => {
+    renderSlide2FromJson();
+  });
+
+  window.addEventListener('resize', fixCollageRows);
+</script>
+<script>
+  async function renderFAQ() {
+    const res = await fetch('faq.json');
+    const faqs = await res.json(); // [web:79][web:149]
+
+    const box = document.querySelector('#faqBox');
+    if (!box) return;
+
+    box.innerHTML = faqs.map(item => `
+      <details name="faq">
+        <summary>${item.q}</summary>
+        <div class="faq__a">${item.a}</div>
+      </details>
+    `).join('');
+  }
+
+  window.addEventListener('load', () => {
+    renderFAQ();
+  });
+</script>
+
+<script src="app.js"></script>
+  
+</body>
+</html>
