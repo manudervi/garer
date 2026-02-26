@@ -196,3 +196,66 @@ function wireDrawer(){
   drawer.querySelectorAll("a").forEach(a => a.addEventListener("click", close));
 }
 document.addEventListener("DOMContentLoaded", wireDrawer);
+function scrollDeckTo(hash){
+  const deck = document.querySelector("#deck");
+  const target = document.querySelector(hash);
+  if(!deck || !target) return;
+
+  // 1) reset scroll interno se la slide è scrollabile
+  target.scrollTop = 0;
+
+  // 2) calcola offset navbar (CSS var) e scrolla con offset
+  const navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navH")) || 92;
+  const top = target.offsetTop - navH - 12; // 12px di aria
+
+  deck.scrollTo({ top, behavior: "smooth" });
+}
+
+document.addEventListener("click", (e) => {
+  const a = e.target.closest('a[href^="#"]');
+  if(!a) return;
+
+  const hash = a.getAttribute("href");
+  if(document.querySelector(hash)){
+    e.preventDefault();
+    scrollDeckTo(hash);
+  }
+});
+function getNavH(){
+  const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navH"));
+  return Number.isFinite(v) ? v : 92;
+}
+
+// calcola la y del target DENTRO #deck, corretta
+function getTopInDeck(deck, target){
+  const deckRect = deck.getBoundingClientRect();
+  const tRect = target.getBoundingClientRect();
+  return (tRect.top - deckRect.top) + deck.scrollTop;
+}
+
+function scrollDeckToHash(hash){
+  const deck = document.querySelector("#deck");
+  const target = document.querySelector(hash);
+  if(!deck || !target) return;
+
+  // se la slide è scrollabile internamente, riportala su
+  target.scrollTop = 0; // proprietà standard per elementi scrollabili [web:126]
+
+  const navH = getNavH();
+  const top = getTopInDeck(deck, target) - navH - 12; // 12px aria
+  deck.scrollTo({ top, behavior: "smooth" });
+}
+
+document.addEventListener("click", (e) => {
+  const a = e.target.closest('a[href^="#"]');
+  if(!a) return;
+
+  const hash = a.getAttribute("href");
+  if(!hash || hash === "#") return;
+
+  // se esiste quella sezione, gestiamo noi lo scroll nel deck
+  if(document.querySelector(hash)){
+    e.preventDefault();
+    scrollDeckToHash(hash);
+  }
+});
