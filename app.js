@@ -1,4 +1,4 @@
-// app.js - Strutturato e modulare
+// app.js - Con nav hide mobile dopo Hero slide
 
 // Utilities
 const Utils = {
@@ -147,14 +147,31 @@ class UIManager {
 
   static wireDeckScroll() {
     const deck = document.querySelector("#deck");
-    if (!deck) return;
+    const nav = document.querySelector(".nav");
+    const burger = document.querySelector(".burger");
+    if (!deck || !nav) return;
 
     const slides = Array.from(document.querySelectorAll(".slide"));
     
+    let lastScrollTop = 0;
+
     const setActiveSlide = () => {
-      const y = deck.scrollTop + (window.innerHeight * 0.35);
+      const scrollTop = deck.scrollTop;
+      const y = scrollTop + (window.innerHeight * 0.35);
       const idx = Math.max(0, Math.min(slides.length - 1, Math.floor(y / window.innerHeight)));
       slides.forEach((slide, i) => slide.classList.toggle("is-active", i === idx));
+
+      // NUOVA LOGICA MOBILE: nascondi nav dopo Hero (idx > 0)
+      if (window.innerWidth <= 900) {
+        if (idx > 0) {
+          nav.classList.add("nav--hidden");
+        } else {
+          nav.classList.remove("nav--hidden");
+        }
+        // Burger SEMPRE visibile su mobile
+        burger.style.display = "block";
+      }
+      lastScrollTop = scrollTop;
     };
 
     deck.addEventListener("scroll", () => requestAnimationFrame(setActiveSlide));
