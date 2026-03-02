@@ -1,261 +1,223 @@
-const formatEUR = (n) =>
-  new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(n);
+// app.js - Strutturato e modulare
 
-const events = [
-  {
-    id: "garer-lean-gasa-01",
-    title: "GARER: Lean Gasa Night",
-    city: "Modena",
-    venue: "Location da definire",
-    date: "Sab 21 Feb 2026",
-    fromPrice: 12,
-    badge: "Last tickets",
-    poster: "assets/sample_evento.jpg",
-    description: "Visual slime viola, cups, drip vibes. Line-up a breve."
+// Utilities
+const Utils = {
+  parseDDMMYY(s) {
+    const [dd, mm, yy] = s.split('/').map(Number);
+    return new Date(2000 + yy, mm - 1, dd);
   },
-  {
-    id: "garer-lean-gasa-02",
-    title: "GARER: Purple Drip",
-    city: "Bologna",
-    venue: "Location da definire",
-    date: "Sab 07 Mar 2026",
-    fromPrice: 10,
-    badge: "Early",
-    poster: "assets/sample_evento.jpg",
-    description: "Trap night + visual. Dresscode: black/purple."
+
+  extractDriveFileId(url) {
+    const match = String(url).match(/\/file\/d\/([^/]+)/);
+    return match ? match[1] : null;
   },
-  {
-    id: "garer-lean-gasa-03",
-    title: "GARER: Cup Spill Edition",
-    city: "Reggio Emilia",
-    venue: "Location da definire",
-    date: "Sab 28 Mar 2026",
-    fromPrice: 15,
-    badge: "New",
-    poster: "assets/sample_evento.jpg",
-    description: "Format speciale con stage design e drip overlay."
+
+  driveToImgSrc(url, width = 1200) {
+    const id = this.extractDriveFileId(url);
+    return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w${width}` : url;
+  },
+
+  formatEUR(n) {
+    return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(n);
+  },
+
+  getNavHeight() {
+    return parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navH")) || 92;
   }
-];
+};
 
-function mountEventGrid(el){
-  el.innerHTML = events.map(e => `
-    <article class="card eventCard">
-      <div class="badge">${e.badge}</div>
-      <div class="poster">
-        <img src="${e.poster}" alt="Locandina ${e.title}">
-      </div>
-      <div class="card__pad">
-        <div class="eventCard__meta">
-          <span>${e.date}</span>
-          <span>da ${formatEUR(e.fromPrice)}</span>
-        </div>
-        <div class="eventCard__title">${e.title}</div>
-        <div class="eventCard__meta">
-          <span>${e.city}</span>
-          <span>${e.venue}</span>
-        </div>
-        <div class="hr"></div>
-        <a class="btn btn--primary eventCard__btn" href="evento.html?id=${encodeURIComponent(e.id)}">
-          Dettagli e prenotazioni
+// Data Manager
+class DataManager {
+  static async loadJSON(url) {
+    const response = await fetch(url);
+    return response.json();
+  }
+
+  static async renderLastEvents() {
+    const data = await this.loadJSON('festini.json');
+    const events = Object.entries(data).map(([nome, info]) => ({
+      nome,
+      dateObj: Utils.parseDDMMYY(info.date),
+      link: info.link,
+      foto: Array.isArray(info.foto_evidenza) ? info.foto_evidenza : []
+    })).sort((a, b) => b.dateObj - a.dateObj).slice(0, 3);
+
+    this.renderEventTitles(events);
+    this.renderEventPhotos(events);
+  }
+
+  static renderEventTitles(events) {
+    const container = document.querySelector('#last3Events');
+    if (!container) return;
+
+    container.innerHTML = events.map(event => `
+      <a class="card" style="box-shadow:none" href="${event.link}" target="_blank" rel="noopener">
+        <div class="card__pad">${event.nome}</div>
+      </a>
+    `).join('');
+  }
+
+  static renderEventPhotos(events) {
+    const collage = document.querySelector('.sideCollage');
+    if (!collage) return;
+
+    const photos = events.flatMap(event => 
+      event.foto.map(url => ({
+        imgSrc: Utils.driveToImgSrc(url, 1200),
+        eventLink: event.link
+      }))
+    );
+
+    if (photos.length === 0) {
+      collage.innerHTML = '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--muted)">Nessuna foto evidenza</div>';
+    } else {
+      collage.innerHTML = photos.map(photo => `
+        <a href="${photo.eventLink}" target="_blank" rel="noopener" style="display:block">
+          <img src="${photo.imgSrc}" alt="">
         </a>
-      </div>
-    </article>
-  `).join("");
-}
+      `).join('');
 
-function getEventById(id){
-  return events.find(e => e.id === id) || events[0];
-}
-
-function mountEventPage(){
-  const params = new URLSearchParams(location.search);
-  const id = params.get("id");
-  const e = getEventById(id);
-
-  const titleEl = document.querySelector("[data-event-title]");
-  const metaEl = document.querySelector("[data-event-meta]");
-  const descEl = document.querySelector("[data-event-desc]");
-  const priceEl = document.querySelector("[data-event-fromprice]");
-  const posterEl = document.querySelector("[data-event-poster]");
-
-  if(titleEl) titleEl.textContent = e.title;
-  if(metaEl) metaEl.textContent = `${e.date} • ${e.city} • ${e.venue}`;
-  if(descEl) descEl.textContent = e.description;
-  if(priceEl) priceEl.textContent = `Da ${formatEUR(e.fromPrice)}`;
-  if(posterEl) posterEl.src = e.poster;
-
-  const ticketType = document.querySelector("#ticketType");
-  const qty = document.querySelector("#qty");
-  const totalEl = document.querySelector("[data-total]");
-  const buyBtn = document.querySelector("#buyBtn");
-
-  const prices = { early: e.fromPrice, standard: e.fromPrice + 5, vip: e.fromPrice + 15 };
-
-  function compute(){
-    const type = ticketType?.value || "standard";
-    const q = Number(qty?.value || 1);
-    const total = (prices[type] || prices.standard) * q;
-    if(totalEl) totalEl.textContent = formatEUR(total);
-    if(buyBtn){
-      buyBtn.dataset.eventId = e.id;
-      buyBtn.dataset.ticketType = type;
-      buyBtn.dataset.qty = String(q);
+      this.fixCollageRows(collage);
     }
   }
 
-  ticketType?.addEventListener("change", compute);
-  qty?.addEventListener("change", compute);
-  compute();
+  static fixCollageRows(collage) {
+    const imgs = collage.querySelectorAll('img');
+    if (imgs.length === 0) return;
+
+    const cols = 2;
+    const rows = Math.ceil(imgs.length / cols);
+    const gap = 10;
+    const padding = 24;
+
+    const availableHeight = collage.clientHeight - padding - (rows - 1) * gap;
+    const rowHeight = availableHeight / rows;
+
+    collage.style.setProperty('--rowH', `${rowHeight}px`);
+  }
+
+  static async renderFAQ() {
+    const faqs = await this.loadJSON('faq.json');
+    const container = document.querySelector('#faqBox');
+    if (!container) return;
+
+    container.innerHTML = faqs.map(item => `
+      <details name="faq">
+        <summary>${item.q}</summary>
+        <div class="faq__a">${item.a}</div>
+      </details>
+    `).join('');
+  }
 }
 
-// Slide activation animation (pptFX)
-function wireDeck(){
-  const deck = document.querySelector(".deck");
-  if(!deck) return;
+// UI Manager
+class UIManager {
+  static setNavHeightVar() {
+    const nav = document.querySelector(".nav");
+    if (!nav) return;
+    document.documentElement.style.setProperty("--navH", `${nav.offsetHeight}px`);
+  }
 
-  const slides = Array.from(document.querySelectorAll(".slide"));
-  const setActive = () => {
-    const y = deck.scrollTop + (window.innerHeight * 0.35);
-    let idx = Math.floor(y / window.innerHeight);
-    idx = Math.max(0, Math.min(slides.length - 1, idx));
-    slides.forEach((s,i) => s.classList.toggle("is-active", i === idx));
-  };
+  static wireDrawer() {
+    const burger = document.querySelector(".burger");
+    const backdrop = document.querySelector(".backdrop");
+    const drawer = document.querySelector("#drawer");
 
-  deck.addEventListener("scroll", () => requestAnimationFrame(setActive));
-  window.addEventListener("resize", setActive);
-  setActive();
-}
+    if (!burger || !backdrop || !drawer) return;
 
-// Stripe Checkout: serve endpoint backend (non mettere secret key nel frontend). [web:24]
-async function startCheckout(payload){
-  const res = await fetch("/api/create-checkout-session", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-  if(!res.ok) throw new Error("Checkout error");
-  const data = await res.json();
-  if(!data.url) throw new Error("Missing checkout url");
-  location.href = data.url;
-}
-
-function wireCheckoutButton(){
-  const buyBtn = document.querySelector("#buyBtn");
-  if(!buyBtn) return;
-
-  buyBtn.addEventListener("click", async () => {
-    buyBtn.disabled = true;
-    buyBtn.textContent = "Reindirizzo al pagamento…";
-
-    const payload = {
-      eventId: buyBtn.dataset.eventId,
-      ticketType: buyBtn.dataset.ticketType,
-      quantity: Number(buyBtn.dataset.qty || 1)
+    const openDrawer = () => {
+      document.body.classList.add("drawerOpen");
+      burger.setAttribute("aria-expanded", "true");
+      drawer.setAttribute("aria-hidden", "false");
     };
 
-    try{
-      await startCheckout(payload);
-    }catch(e){
-      buyBtn.disabled = false;
-      buyBtn.textContent = "Acquista ora";
-      alert("Errore checkout. Riprova o contattaci su WhatsApp.");
-    }
-  });
-}
+    const closeDrawer = () => {
+      document.body.classList.remove("drawerOpen");
+      burger.setAttribute("aria-expanded", "false");
+      drawer.setAttribute("aria-hidden", "true");
+    };
 
-document.addEventListener("DOMContentLoaded", () => {
-  const grid = document.querySelector("[data-event-grid]");
-  if(grid) mountEventGrid(grid);
-
-  wireDeck();
-
-  if(document.body.dataset.page === "evento"){
-    mountEventPage();
-    wireCheckoutButton();
+    burger.addEventListener("click", () => 
+      document.body.classList.contains("drawerOpen") ? closeDrawer() : openDrawer()
+    );
+    
+    backdrop.addEventListener("click", closeDrawer);
+    drawer.querySelectorAll("a").forEach(link => link.addEventListener("click", closeDrawer));
   }
-});
-function wireDrawer(){
-  const burger = document.querySelector(".burger");
-  const backdrop = document.querySelector(".backdrop");
-  const drawer = document.querySelector(".drawer");
-  if(!burger || !backdrop || !drawer) return;
 
-  const open = () => {
-    document.body.classList.add("drawerOpen");
-    burger.setAttribute("aria-expanded","true");
-    drawer.setAttribute("aria-hidden","false");
-  };
-  const close = () => {
-    document.body.classList.remove("drawerOpen");
-    burger.setAttribute("aria-expanded","false");
-    drawer.setAttribute("aria-hidden","true");
-  };
+  static wireDeckScroll() {
+    const deck = document.querySelector("#deck");
+    if (!deck) return;
 
-  burger.addEventListener("click", () => document.body.classList.contains("drawerOpen") ? close() : open());
-  backdrop.addEventListener("click", close);
-  drawer.querySelectorAll("a").forEach(a => a.addEventListener("click", close));
-}
-document.addEventListener("DOMContentLoaded", wireDrawer);
-function scrollDeckTo(hash){
-  const deck = document.querySelector("#deck");
-  const target = document.querySelector(hash);
-  if(!deck || !target) return;
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    
+    const setActiveSlide = () => {
+      const y = deck.scrollTop + (window.innerHeight * 0.35);
+      const idx = Math.max(0, Math.min(slides.length - 1, Math.floor(y / window.innerHeight)));
+      slides.forEach((slide, i) => slide.classList.toggle("is-active", i === idx));
+    };
 
-  // 1) reset scroll interno se la slide è scrollabile
-  target.scrollTop = 0;
-
-  // 2) calcola offset navbar (CSS var) e scrolla con offset
-  const navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navH")) || 92;
-  const top = target.offsetTop - navH - 12; // 12px di aria
-
-  deck.scrollTo({ top, behavior: "smooth" });
-}
-
-document.addEventListener("click", (e) => {
-  const a = e.target.closest('a[href^="#"]');
-  if(!a) return;
-
-  const hash = a.getAttribute("href");
-  if(document.querySelector(hash)){
-    e.preventDefault();
-    scrollDeckTo(hash);
+    deck.addEventListener("scroll", () => requestAnimationFrame(setActiveSlide));
+    window.addEventListener("resize", setActiveSlide);
+    setActiveSlide();
   }
-});
-function getNavH(){
-  const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navH"));
-  return Number.isFinite(v) ? v : 92;
-}
 
-// calcola la y del target DENTRO #deck, corretta
-function getTopInDeck(deck, target){
-  const deckRect = deck.getBoundingClientRect();
-  const tRect = target.getBoundingClientRect();
-  return (tRect.top - deckRect.top) + deck.scrollTop;
-}
+  static wireHashScroll() {
+    document.addEventListener("click", (e) => {
+      const link = e.target.closest('a[href^="#"]');
+      if (!link) return;
 
-function scrollDeckToHash(hash){
-  const deck = document.querySelector("#deck");
-  const target = document.querySelector(hash);
-  if(!deck || !target) return;
-
-  // se la slide è scrollabile internamente, riportala su
-  target.scrollTop = 0; // proprietà standard per elementi scrollabili [web:126]
-
-  const navH = getNavH();
-  const top = getTopInDeck(deck, target) - navH - 12; // 12px aria
-  deck.scrollTo({ top, behavior: "smooth" });
-}
-
-document.addEventListener("click", (e) => {
-  const a = e.target.closest('a[href^="#"]');
-  if(!a) return;
-
-  const hash = a.getAttribute("href");
-  if(!hash || hash === "#") return;
-
-  // se esiste quella sezione, gestiamo noi lo scroll nel deck
-  if(document.querySelector(hash)){
-    e.preventDefault();
-    scrollDeckToHash(hash);
+      const hash = link.getAttribute("href");
+      const target = document.querySelector(hash);
+      
+      if (target) {
+        e.preventDefault();
+        this.scrollToTarget(target);
+      }
+    });
   }
-});
+
+  static scrollToTarget(target) {
+    const deck = document.querySelector("#deck");
+    if (!deck || !target) return;
+
+    target.scrollTop = 0;
+    
+    const navH = Utils.getNavHeight();
+    const deckRect = deck.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const top = (targetRect.top - deckRect.top) + deck.scrollTop - navH - 12;
+
+    deck.scrollTo({ top, behavior: "smooth" });
+  }
+}
+
+// Initialization
+class App {
+  static async init() {
+    // Set up UI
+    UIManager.setNavHeightVar();
+    UIManager.wireDrawer();
+    UIManager.wireDeckScroll();
+    UIManager.wireHashScroll();
+
+    // Load dynamic content
+    await Promise.all([
+      DataManager.renderLastEvents(),
+      DataManager.renderFAQ()
+    ]);
+
+    // Event listeners for resize
+    ['resize', 'orientationchange'].forEach(event => {
+      window.addEventListener(event, () => {
+        UIManager.setNavHeightVar();
+        const collage = document.querySelector('.sideCollage');
+        if (collage) DataManager.fixCollageRows(collage);
+      });
+    });
+  }
+}
+
+// Start app when DOM is ready
+document.addEventListener('DOMContentLoaded', () => App.init());
+window.addEventListener('load', () => App.init());
