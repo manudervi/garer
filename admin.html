@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GARER — Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="container nav__inner">
+      <a class="brand" href="index.html">
+        <div class="heroLogoWrap">
+          <img class="heroLogo" src="assets/garer_logo_1.png" alt="GARER logo" />
+        </div>
+      </a>
+      <span style="font-weight:900; color:var(--muted)">Admin Panel</span>
+      <button class="btn btn--primary" id="logoutBtn">Logout</button>
+    </div>
+  </header>
+
+  <!-- LOGIN OVERLAY -->
+  <div id="loginOverlay" class="login-overlay">
+  <div class="login-box card">
+    <div class="card__pad">
+      <h2 style="margin:0 0 6px">Admin Login</h2>
+      <small>Accesso riservato agli organizzatori</small>
+      <div class="hr"></div>
+      <button class="btn btn--primary" id="loginBtn" style="width:100%; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:10px">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" />
+        Accedi con Google
+      </button>
+    </div>
+  </div>
+</div>
+
+
+  <!-- ADMIN CONTENT (hidden until logged in) -->
+  <main class="admin-main" id="adminContent" style="display:none">
+
+    <!-- SEZIONE: PROSSIMO EVENTO -->
+    <section class="admin-section card">
+      <div class="card__pad">
+        <h2 class="section-title">🗓 Prossimo Evento</h2>
+        <small>Questi dati appaiono nella Home del sito.</small>
+        <div class="hr"></div>
+
+        <div class="fields-grid">
+          <div class="field">
+            <label>Nome Evento</label>
+            <input type="text" id="evtName" placeholder="es. Spring Break" />
+          </div>
+          <div class="field">
+            <label>Data (gg/mm/aa)</label>
+            <input type="text" id="evtDate" placeholder="es. 21/03/26" />
+          </div>
+          <div class="field full">
+            <label>Link WhatsApp / Biglietti</label>
+            <input type="url" id="evtLink" placeholder="https://chat.whatsapp.com/..." />
+          </div>
+          <div class="field full">
+            <label>Descrizione / Dettagli</label>
+            <textarea id="evtDesc" rows="3" placeholder="Dettagli serata, location, orari…"></textarea>
+          </div>
+          <div class="field full">
+            <label>URL Poster / Immagine evento</label>
+            <input type="url" id="evtImg" placeholder="https://... oppure assets/sample_evento.jpeg" />
+            <div id="evtImgPreview" class="img-preview"></div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap">
+          <button class="btn btn--primary" id="saveEventBtn">💾 Salva Evento</button>
+          <button class="btn" id="resetEventBtn">↩ Ripristina Default</button>
+        </div>
+        <p id="eventSaveMsg" class="save-msg" style="display:none">✅ Evento salvato!</p>
+      </div>
+    </section>
+
+    <!-- SEZIONE: GALLERY JSON -->
+    <section class="admin-section card">
+      <div class="card__pad">
+        <h2 class="section-title">🖼 Gallery — Gestione Serate</h2>
+        <small>Aggiungi, modifica o rimuovi le serate dalla galleria.</small>
+        <div class="hr"></div>
+
+        <div id="galleryEditor"></div>
+
+        <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap">
+          <button class="btn btn--primary" id="addEventBtn">＋ Aggiungi Serata</button>
+          <button class="btn btn--primary" id="saveGalleryBtn">💾 Salva Gallery</button>
+          <button class="btn" id="resetGalleryBtn">↩ Ripristina Default</button>
+        </div>
+        <p id="gallerySaveMsg" class="save-msg" style="display:none">✅ Gallery salvata!</p>
+      </div>
+    </section>
+
+  </main>
+
+<script type="module">
+import { initializeApp }          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged }
+                                   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// ── FIREBASE CONFIG ──────────────────────────────────────
+const firebaseConfig = {
+
+  apiKey: "AIzaSyC5iX2PkWxSrbRObyPFzm2OIqPB8eed_0c",
+  authDomain: "garer-777.firebaseapp.com",
+  databaseURL: "https://garer-777-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "garer-777",
+  storageBucket: "garer-777.firebasestorage.app",
+  messagingSenderId: "353631922937",
+  appId: "1:353631922937:web:d61249d6997e86ce3e9028",
+  measurementId: "G-FCV9FLE4VW"
+
+};
+
+const app      = initializeApp(firebaseConfig);
+const db       = getDatabase(app);
+const auth     = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+// ── DEFAULT DATA ─────────────────────────────────────────
+const DEFAULT_EVENT = {
+  name: "PROSSIMA DATA GARER", date: "",
+  link: "https://chat.whatsapp.com/JvbMyrgzRMY821vF3Wt4Uu",
+  desc: "", img: "assets/sample_evento.jpeg"
+};
+
+const DEFAULT_GALLERY = {
+  "Halloween Night": {
+    date: "03/10/25",
+    link: "https://drive.google.com/drive/folders/1DKl5iXO1iY7BD2zIvDxZuDovQdhMBJWK",
+    foto_evidenza: [
+      "https://drive.google.com/file/d/1XZBORvd-imrbRw_xmDc4BovfMx5UoL5F/view",
+      "https://drive.google.com/file/d/141uXwAXyfHeBnhm0v2QjhB152XVbNZ0q/view",
+      "https://drive.google.com/file/d/1np_f51YLGOMAW8swImX6ZS9MoxvqvRUN/view"
+    ]
+  },
+  "Spring Break": {
+    date: "22/01/26",
+    link: "https://drive.google.com/drive/folders/XXXXX4",
+    foto_evidenza: []
+  },
+  "21-02-2026": {
+    date: "21/02/26",
+    link: "https://drive.google.com/drive/folders/1arOXGxCaPtWRlCq_bJL2Hb16YSzcqFqN",
+    foto_evidenza: [
+      "https://drive.google.com/file/d/13Ckx39ks4U8WWn1TWUfn_wfyuH2OnV9L/view",
+      "https://drive.google.com/file/d/1tUXMFn6DTnNqU-Q9izKci104Hy08mohw/view",
+      "https://drive.google.com/file/d/1qq-YKMai3iQKqpBWopRlT9j4fnfD77tl/view"
+    ]
+  }
+};
+
+// ── AUTH ─────────────────────────────────────────────────
+const loginOverlay = document.getElementById("loginOverlay");
+const adminContent = document.getElementById("adminContent");
+const logoutBtn    = document.getElementById("logoutBtn");
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch(e) {
+    console.error(e);
+    alert("Login fallito. Riprova.");
+  }
+});
+
+logoutBtn.addEventListener("click", () => signOut(auth));
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    const emailKey = user.email.replace(/\./g, "-");
+    const snap = await get(ref(db, `admins/${emailKey}`));
+    if (snap.exists() && snap.val() === true) {
+      loginOverlay.style.display = "none";
+      adminContent.style.display = "flex";
+      loadEventForm();
+      loadGalleryEditor();
+    } else {
+      signOut(auth);
+      loginOverlay.style.display = "flex";
+      adminContent.style.display = "none";
+    }
+  } else {
+    loginOverlay.style.display = "flex";
+    adminContent.style.display = "none";
+  }
+});
+
+// ── NEXT EVENT ───────────────────────────────────────────
+async function loadEventForm() {
+  let ev = DEFAULT_EVENT;
+  try {
+    const snap = await get(ref(db, 'nextEvent'));
+    if (snap.exists()) ev = snap.val();
+  } catch(e) { console.error(e); }
+
+  document.getElementById("evtName").value = ev.name || "";
+  document.getElementById("evtDate").value = ev.date || "";
+  document.getElementById("evtLink").value = ev.link || "";
+  document.getElementById("evtDesc").value = ev.desc || "";
+  document.getElementById("evtImg").value  = ev.img  || "";
+  updateImgPreview(ev.img);
+}
+
+document.getElementById("evtImg").addEventListener("input", e => updateImgPreview(e.target.value));
+
+function updateImgPreview(url) {
+  const box = document.getElementById("evtImgPreview");
+  box.innerHTML = url
+    ? `<img src="${url}" alt="Preview" onerror="this.style.display='none'" />`
+    : "";
+}
+
+document.getElementById("saveEventBtn").addEventListener("click", async () => {
+  const ev = {
+    name: document.getElementById("evtName").value.trim(),
+    date: document.getElementById("evtDate").value.trim(),
+    link: document.getElementById("evtLink").value.trim(),
+    desc: document.getElementById("evtDesc").value.trim(),
+    img:  document.getElementById("evtImg").value.trim()
+  };
+  try {
+    await set(ref(db, 'nextEvent'), ev);
+    showMsg("eventSaveMsg");
+  } catch(e) {
+    console.error(e);
+    alert("Errore nel salvataggio.");
+  }
+});
+
+document.getElementById("resetEventBtn").addEventListener("click", async () => {
+  await set(ref(db, 'nextEvent'), DEFAULT_EVENT);
+  await loadEventForm();
+});
+
+// ── GALLERY EDITOR ────────────────────────────────────────
+async function loadGalleryEditor() {
+  let gallery = DEFAULT_GALLERY;
+  try {
+    const snap = await get(ref(db, 'gallery'));
+    if (snap.exists()) {
+      gallery = snap.val();
+      Object.values(gallery).forEach(ev => {
+        if (ev.foto_evidenza && !Array.isArray(ev.foto_evidenza))
+          ev.foto_evidenza = Object.values(ev.foto_evidenza);
+        else if (!ev.foto_evidenza)
+          ev.foto_evidenza = [];
+      });
+    }
+  } catch(e) { console.error(e); }
+
+  const container = document.getElementById("galleryEditor");
+  container.innerHTML = "";
+  Object.entries(gallery).forEach(([name, data]) =>
+    container.appendChild(buildEventCard(name, data))
+  );
+}
+
+function buildEventCard(name, data) {
+  const card = document.createElement("div");
+  card.className = "gallery-event-card";
+  card.dataset.key = name;
+  card.innerHTML = `
+    <div class="card-header">
+      <span class="card-title">📅 ${name}</span>
+      <button class="btn btn--danger btn--sm" data-action="deleteEvent">🗑 Rimuovi</button>
+    </div>
+    <div class="fields-grid">
+      <div class="field">
+        <label>Nome Serata</label>
+        <input type="text" data-field="name" value="${name}" />
+      </div>
+      <div class="field">
+        <label>Data (gg/mm/aa)</label>
+        <input type="text" data-field="date" value="${data.date || ""}" />
+      </div>
+      <div class="field full">
+        <label>Link Google Drive</label>
+        <input type="url" data-field="link" value="${data.link || ""}" />
+      </div>
+    </div>
+    <div class="field full" style="padding:0 0 4px">
+      <label>Foto Evidenza (URL)</label>
+      <div class="foto-list" data-fotolist>
+        ${(data.foto_evidenza || []).map(url => fotoRow(url)).join("")}
+      </div>
+      <button class="btn btn--sm" data-action="addFoto" style="margin-top:8px; width:fit-content">＋ Aggiungi Foto</button>
+    </div>
+  `;
+
+  card.querySelector("[data-action='deleteEvent']").addEventListener("click", () => {
+    if (confirm(`Rimuovere la serata "${name}"?`)) card.remove();
+  });
+  card.querySelector("[data-action='addFoto']").addEventListener("click", () => {
+    card.querySelector("[data-fotolist]").insertAdjacentHTML("beforeend", fotoRow(""));
+    bindFotoRemove(card);
+  });
+  bindFotoRemove(card);
+  return card;
+}
+
+function fotoRow(url) {
+  return `<div class="foto-row">
+    <input type="url" placeholder="https://drive.google.com/..." value="${url}" />
+    <button class="btn btn--danger btn--sm" data-action="removeFoto">✕</button>
+  </div>`;
+}
+
+function bindFotoRemove(card) {
+  card.querySelectorAll("[data-action='removeFoto']").forEach(btn => {
+    btn.onclick = () => btn.closest(".foto-row").remove();
+  });
+}
+
+document.getElementById("addEventBtn").addEventListener("click", () => {
+  const name = prompt("Nome della nuova serata:");
+  if (!name || !name.trim()) return;
+  document.getElementById("galleryEditor")
+    .appendChild(buildEventCard(name.trim(), { date: "", link: "", foto_evidenza: [] }));
+});
+
+document.getElementById("saveGalleryBtn").addEventListener("click", async () => {
+  const gallery = {};
+  document.querySelectorAll(".gallery-event-card").forEach(card => {
+    const nameInput = card.querySelector("[data-field='name']");
+    const name = nameInput ? nameInput.value.trim() : card.dataset.key;
+    if (!name) return;
+    gallery[name] = {
+      date: card.querySelector("[data-field='date']")?.value.trim() || "",
+      link: card.querySelector("[data-field='link']")?.value.trim() || "",
+      foto_evidenza: [...card.querySelectorAll("[data-fotolist] input")]
+        .map(i => i.value.trim()).filter(Boolean)
+    };
+  });
+  try {
+    await set(ref(db, 'gallery'), gallery);
+    showMsg("gallerySaveMsg");
+  } catch(e) {
+    console.error(e);
+    alert("Errore nel salvataggio.");
+  }
+});
+
+document.getElementById("resetGalleryBtn").addEventListener("click", async () => {
+  if (confirm("Ripristinare la gallery ai valori di default?")) {
+    await set(ref(db, 'gallery'), DEFAULT_GALLERY);
+    await loadGalleryEditor();
+  }
+});
+
+// ── UTILS ────────────────────────────────────────────────
+function showMsg(id) {
+  const el = document.getElementById(id);
+  el.style.display = "block";
+  setTimeout(() => el.style.display = "none", 3000);
+}
+</script>
+
+
+</body>
+</html>
