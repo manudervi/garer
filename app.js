@@ -1,99 +1,141 @@
-// app.js - Con nav hide mobile dopo Hero slide
+// app.js — Tab system, zero scroll-snap
 
-// Utilities
 const Utils = {
   parseDDMMYY(s) {
     const [dd, mm, yy] = s.split('/').map(Number);
     return new Date(2000 + yy, mm - 1, dd);
   },
-
   extractDriveFileId(url) {
-    const match = String(url).match(/\/file\/d\/([^/]+)/);
-    return match ? match[1] : null;
+    const m = String(url).match(/\/file\/d\/([^/]+)/);
+    return m ? m[1] : null;
   },
-
   driveToImgSrc(url, width = 1200) {
     const id = this.extractDriveFileId(url);
     return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w${width}` : url;
-  },
-
-  formatEUR(n) {
-    return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(n);
-  },
-
-  getNavHeight() {
-    return parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navH")) || 92;
   }
 };
 
-// Data Manager
+// ── TABS ──────────────────────────────────────────────
+class TabManager {
+  static init() {
+    this.panels = document.querySelectorAll('.tab-panel');
+    this.navLinks = document.querySelectorAll('[data-tab]');
+    this.showTab('home');
+
+    // Click su qualsiasi [data-tab]
+    document.addEventListener('click', (e) => {
+      const el = e.target.closest('[data-tab]');
+      if (!el) return;
+      e.preventDefault();
+      const tab = el.dataset.tab;
+      this.showTab(tab);
+      DrawerManager.close();
+    });
+  }
+
+  static showTab(name) {
+    // Panels
+    this.panels.forEach(p => {
+      const active = p.dataset.panel === name;
+      p.classList.toggle('is-active', active);
+      // Scroll to top di ogni panel quando viene mostrato
+      if (active) p.scrollTop = 0;
+    });
+
+    // Link attivi (nav + drawer)
+    this.navLinks.forEach(a => {
+      a.classList.toggle('is-active', a.dataset.tab === name);
+    });
+
+    this.currentTab = name;
+  }
+}
+
+// ── DRAWER ────────────────────────────────────────────
+class DrawerManager {
+  static init() {
+    this.burger   = document.querySelector('.burger');
+    this.drawer   = document.querySelector('#drawer');
+    this.backdrop = document.querySelector('.backdrop');
+    if (!this.burger) return;
+
+    this.burger.addEventListener('click', () => this.toggle());
+    this.backdrop.addEventListener('click', () => this.close());
+  }
+
+  static toggle() {
+    document.body.classList.contains('drawerOpen') ? this.close() : this.open();
+  }
+
+  static open() {
+    document.body.classList.add('drawerOpen');
+    this.burger.setAttribute('aria-expanded', 'true');
+    this.drawer.setAttribute('aria-hidden', 'false');
+  }
+
+  static close() {
+    document.body.classList.remove('drawerOpen');
+    this.burger.setAttribute('aria-expanded', 'false');
+    this.drawer.setAttribute('aria-hidden', 'true');
+  }
+}
+
+// ── DATA ──────────────────────────────────────────────
 class DataManager {
   static async loadJSON(url) {
-    const response = await fetch(url);
-    return response.json();
+    const res = await fetch(url);
+    return res.json();
   }
 
   static async renderLastEvents() {
     const data = await this.loadJSON('festini.json');
-    const events = Object.entries(data).map(([nome, info]) => ({
-      nome,
-      dateObj: Utils.parseDDMMYY(info.date),
-      link: info.link,
-      foto: Array.isArray(info.foto_evidenza) ? info.foto_evidenza : []
-    })).sort((a, b) => b.dateObj - a.dateObj).slice(0, 3);
-
-    this.renderEventTitles(events);
-    this.renderEventPhotos(events);
-  }
-
-  static renderEventTitles(events) {
-    const container = document.querySelector('#last3Events');
-    if (!container) return;
-
-    container.innerHTML = events.map(event => `
-      <a class="card" style="box-shadow:none" href="${event.link}" target="_blank" rel="noopener">
-        <div class="card__pad">${event.nome}</div>
-      </a>
-    `).join('');
-  }
-
-  static renderEventPhotos(events) {
-    const collage = document.querySelector('.sideCollage');
-    if (!collage) return;
-
-    const photos = events.flatMap(event => 
-      event.foto.map(url => ({
-        imgSrc: Utils.driveToImgSrc(url, 1200),
-        eventLink: event.link
+    const events = Object.entries(data)
+      .map(([nome, info]) => ({
+        nome,
+        dateObj: Utils.parseDDMMYY(info.date),
+        link: info.link,
+        foto: Array.isArray(info.foto_evidenza) ? info.foto_evidenza : []
       }))
-    );
+      .sort((a, b) => b.dateObj - a.dateObj)
+      .slice(0, 3);
 
-    if (photos.length === 0) {
-      collage.innerHTML = '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--muted)">Nessuna foto evidenza</div>';
-    } else {
-      collage.innerHTML = photos.map(photo => `
-        <a href="${photo.eventLink}" target="_blank" rel="noopener" style="display:block">
-          <img src="${photo.imgSrc}" alt="">
+    // Titoli
+    const container = document.querySelector('#last3Events');
+    if (container) {
+      container.innerHTML = events.map(ev => `
+        <a class="card" style="box-shadow:none" href="${ev.link}" target="_blank" rel="noopener">
+          <div class="card__pad">${ev.nome}</div>
         </a>
       `).join('');
+    }
 
-      this.fixCollageRows(collage);
+    // Foto collage
+    const collage = document.querySelector('.sideCollage');
+    if (collage) {
+      const photos = events.flatMap(ev =>
+        ev.foto.map(url => ({ src: Utils.driveToImgSrc(url), link: ev.link }))
+      );
+
+      if (photos.length === 0) {
+        collage.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted)">Nessuna foto</div>`;
+      } else {
+        collage.innerHTML = photos.map(p => `
+          <a href="${p.link}" target="_blank" rel="noopener">
+            <img src="${p.src}" alt="" loading="lazy">
+          </a>
+        `).join('');
+        this.fixCollageRows(collage);
+      }
     }
   }
 
   static fixCollageRows(collage) {
-    const imgs = collage.querySelectorAll('img');
-    if (imgs.length === 0) return;
-
-    const cols = 2;
-    const rows = Math.ceil(imgs.length / cols);
-    const gap = 10;
-    const padding = 24;
-
-    const availableHeight = collage.clientHeight - padding - (rows - 1) * gap;
-    const rowHeight = availableHeight / rows;
-
-    collage.style.setProperty('--rowH', `${rowHeight}px`);
+    const items = collage.querySelectorAll('a');
+    if (!items.length) return;
+    const rows = Math.ceil(items.length / 2);
+    const gap = 10, padding = 24;
+    const rowH = (collage.clientHeight - padding - (rows - 1) * gap) / rows;
+    collage.style.setProperty('--rowH', `${rowH}px`);
   }
 
   static async renderFAQ() {
@@ -110,131 +152,31 @@ class DataManager {
   }
 }
 
-// UI Manager
-class UIManager {
-  static setNavHeightVar() {
-    const nav = document.querySelector(".nav");
-    if (!nav) return;
-    document.documentElement.style.setProperty("--navH", `${nav.offsetHeight}px`);
-  }
-
-  static wireDrawer() {
-    const burger = document.querySelector(".burger");
-    const backdrop = document.querySelector(".backdrop");
-    const drawer = document.querySelector("#drawer");
-
-    if (!burger || !backdrop || !drawer) return;
-
-    const openDrawer = () => {
-      document.body.classList.add("drawerOpen");
-      burger.setAttribute("aria-expanded", "true");
-      drawer.setAttribute("aria-hidden", "false");
-    };
-
-    const closeDrawer = () => {
-      document.body.classList.remove("drawerOpen");
-      burger.setAttribute("aria-expanded", "false");
-      drawer.setAttribute("aria-hidden", "true");
-    };
-
-    burger.addEventListener("click", () => 
-      document.body.classList.contains("drawerOpen") ? closeDrawer() : openDrawer()
-    );
-    
-    backdrop.addEventListener("click", closeDrawer);
-    drawer.querySelectorAll("a").forEach(link => link.addEventListener("click", closeDrawer));
-  }
-
-  static wireDeckScroll() {
-    const deck = document.querySelector("#deck");
-    const nav = document.querySelector(".nav");
-    const burger = document.querySelector(".burger");
-    if (!deck || !nav) return;
-
-    const slides = Array.from(document.querySelectorAll(".slide"));
-    
-    let lastScrollTop = 0;
-
-    const setActiveSlide = () => {
-      const scrollTop = deck.scrollTop;
-      const y = scrollTop + (window.innerHeight * 0.35);
-      const idx = Math.max(0, Math.min(slides.length - 1, Math.floor(y / window.innerHeight)));
-      slides.forEach((slide, i) => slide.classList.toggle("is-active", i === idx));
-
-      // NUOVA LOGICA MOBILE: nascondi nav dopo Hero (idx > 0)
-      if (window.innerWidth <= 900) {
-        if (idx > 0) {
-          nav.classList.add("nav--hidden");
-        } else {
-          nav.classList.remove("nav--hidden");
-        }
-        // Burger SEMPRE visibile su mobile
-        burger.style.display = "block";
-      }
-      lastScrollTop = scrollTop;
-    };
-
-    deck.addEventListener("scroll", () => requestAnimationFrame(setActiveSlide));
-    window.addEventListener("resize", setActiveSlide);
-    setActiveSlide();
-  }
-
-  static wireHashScroll() {
-    document.addEventListener("click", (e) => {
-      const link = e.target.closest('a[href^="#"]');
-      if (!link) return;
-
-      const hash = link.getAttribute("href");
-      const target = document.querySelector(hash);
-      
-      if (target) {
-        e.preventDefault();
-        this.scrollToTarget(target);
-      }
-    });
-  }
-
-  static scrollToTarget(target) {
-    const deck = document.querySelector("#deck");
-    if (!deck || !target) return;
-
-    target.scrollTop = 0;
-    
-    const navH = Utils.getNavHeight();
-    const deckRect = deck.getBoundingClientRect();
-    const targetRect = target.getBoundingClientRect();
-    const top = (targetRect.top - deckRect.top) + deck.scrollTop - navH - 12;
-
-    deck.scrollTo({ top, behavior: "smooth" });
-  }
+// ── NAV HEIGHT ────────────────────────────────────────
+function setNavHeight() {
+  const nav = document.querySelector('.nav');
+  if (!nav) return;
+  document.documentElement.style.setProperty('--navH', `${nav.offsetHeight}px`);
 }
 
-// Initialization
-class App {
-  static async init() {
-    // Set up UI
-    UIManager.setNavHeightVar();
-    UIManager.wireDrawer();
-    UIManager.wireDeckScroll();
-    UIManager.wireHashScroll();
+// ── INIT ──────────────────────────────────────────────
+async function init() {
+  setNavHeight();
+  DrawerManager.init();
+  TabManager.init();
 
-    // Load dynamic content
-    await Promise.all([
-      DataManager.renderLastEvents(),
-      DataManager.renderFAQ()
-    ]);
+  await Promise.all([
+    DataManager.renderLastEvents(),
+    DataManager.renderFAQ()
+  ]);
 
-    // Event listeners for resize
-    ['resize', 'orientationchange'].forEach(event => {
-      window.addEventListener(event, () => {
-        UIManager.setNavHeightVar();
-        const collage = document.querySelector('.sideCollage');
-        if (collage) DataManager.fixCollageRows(collage);
-      });
-    });
-  }
+  ['resize', 'orientationchange'].forEach(ev =>
+    window.addEventListener(ev, () => {
+      setNavHeight();
+      const c = document.querySelector('.sideCollage');
+      if (c) DataManager.fixCollageRows(c);
+    })
+  );
 }
 
-// Start app when DOM is ready
-document.addEventListener('DOMContentLoaded', () => App.init());
-window.addEventListener('load', () => App.init());
+document.addEventListener('DOMContentLoaded', init);

@@ -8,62 +8,61 @@
 </head>
 
 <body>
-  <!-- Navigation -->
+
+  <!-- Navigation Desktop -->
   <header class="nav">
     <div class="container nav__inner">
-      <a class="brand" href="index.html">
+      <a class="brand" href="#" data-tab="home">
         <div class="heroLogoWrap">
           <img class="heroLogo" src="assets/garer_logo_1.png" alt="GARER logo" />
         </div>
       </a>
-      
+
       <nav class="nav__links">
-        <a href="#gallery">Gallery</a>
-        <a href="#faq">FAQ</a>
-        <a href="#contatti">Contatti</a>
+        <a href="#" data-tab="home">Home</a>
+        <a href="#" data-tab="gallery">Gallery</a>
+        <a href="#" data-tab="faq">FAQ</a>
+        <a href="#" data-tab="contatti">Contatti</a>
       </nav>
-      
+
       <div class="nav__cta">
-        <a class="btn btn--primary" href="/">Biglietti</a>
+        <a class="btn btn--primary" target="_blank" href="https://chat.whatsapp.com/JvbMyrgzRMY821vF3Wt4Uu">Biglietti</a>
       </div>
     </div>
   </header>
 
-  <!-- Mobile Menu -->
-  <button class="burger" aria-label="Apri menu" aria-controls="drawer" aria-expanded="false">
+  <!-- Burger Mobile -->
+  <button class="burger" aria-label="Apri menu" aria-expanded="false">
     <span></span><span></span><span></span>
   </button>
 
+  <!-- Drawer Mobile -->
   <aside id="drawer" class="drawer" aria-hidden="true">
-    <a href="#gallery">Gallery</a>
-    <a href="#faq">FAQ</a>
-    <a href="#contatti">Contatti</a>
+    <a href="#" data-tab="home"> Home</a>
+    <a href="#" data-tab="gallery"> Gallery</a>
+    <a href="#" data-tab="faq"> FAQ</a>
+    <a href="#" data-tab="contatti"> Contatti</a>
+    <a class="btn btn--primary" target="_blank" href="https://chat.whatsapp.com/JvbMyrgzRMY821vF3Wt4Uu" style="margin-top:10px; text-align:center">Biglietti</a>
   </aside>
 
-  <div class="backdrop" data-close-drawer></div>
+  <div class="backdrop"></div>
 
-  <!-- Main Content Deck -->
-  <main id="deck" class="deck noScrollbars">
-    <!-- Hero Slide -->
-    <section class="slide slide--tall">
+  <!-- TABS CONTENT -->
+  <main class="tabs-wrap">
+
+    <!-- HOME -->
+    <section class="tab-panel" data-panel="home">
       <div class="noise" aria-hidden="true"></div>
       <div class="bgOrb" style="right:-160px; top:90px" aria-hidden="true"></div>
 
-      <div class="slide__inner">
+      <div class="panel__inner">
         <div class="pptFX">
-          <div class="dripBar" style="width:140px; position:relative">
-            <span class="dripBlob" style="left:12px; top:10px"></span>
-            <span class="dripBlob" style="left:52px; top:10px; animation-delay:.6s"></span>
-            <span class="dripBlob" style="left:98px; top:10px; animation-delay:1.1s"></span>
-          </div>
 
           <h1 class="h1" style="margin-top:14px">PROSSIMA DATA GARER</h1>
-          <p class="lead">
-            <h2>LOADING...</h2>
-          </p>
+          <p class="lead"><span id="nextEventLabel">LOADING...</span></p>
 
           <div style="display:flex; gap:10px; flex-wrap:wrap">
-            <a class="btn btn--primary" href="https://chat.whatsapp.com/JvbMyrgzRMY821vF3Wt4Uu">Vedi evento</a>
+            <a class="btn btn--primary" target="_blank" href="https://chat.whatsapp.com/JvbMyrgzRMY821vF3Wt4Uu">Vedi evento</a>
           </div>
 
           <div class="hr"></div>
@@ -77,12 +76,12 @@
       </div>
     </section>
 
-    <!-- Gallery Slide -->
-    <section class="slide slide--tall" id="gallery">
+    <!-- GALLERY -->
+    <section class="tab-panel" data-panel="gallery">
       <div class="noise" aria-hidden="true"></div>
       <div class="bgOrb" style="left:-170px; top:160px; opacity:.6" aria-hidden="true"></div>
 
-      <div class="slide__inner">
+      <div class="panel__inner">
         <div class="pptFX card">
           <div class="card__pad">
             <h1 class="h1" style="margin-top:14px">FLASHBACK GALLERIA</h1>
@@ -95,12 +94,12 @@
       </div>
     </section>
 
-    <!-- FAQ Slide -->
-    <section class="slide slide--tall" id="faq">
+    <!-- FAQ -->
+    <section class="tab-panel" data-panel="faq">
       <div class="noise" aria-hidden="true"></div>
       <div class="bgOrb" style="right:-190px; top:220px; opacity:.55" aria-hidden="true"></div>
 
-      <div class="slide__inner" style="grid-template-columns:1fr">
+      <div class="panel__inner" style="grid-template-columns:1fr">
         <div class="pptFX card">
           <div class="card__pad">
             <h2 style="margin:0 0 10px">FAQ</h2>
@@ -112,22 +111,20 @@
       </div>
     </section>
 
-    <!-- Contatti Slide -->
-    <section class="slide" id="contatti">
+    <!-- CONTATTI -->
+    <section class="tab-panel" data-panel="contatti">
       <div class="noise" aria-hidden="true"></div>
 
-      <div class="slide__inner">
+      <div class="panel__inner">
         <div class="pptFX card">
           <div class="card__pad">
             <h2 style="margin:0 0 10px">Contatti</h2>
             <p class="lead" style="margin:0 0 12px">
               WhatsApp + Instagram per supporto prenotazioni.
             </p>
-
             <div style="display:flex; gap:10px; flex-wrap:wrap">
-              <a class="btn btn--primary" href="https://wa.me/+393385881663">Dettagli e prenotazioni</a>
+              <a class="btn btn--primary" target="_blank" href="https://wa.me/+393385881663">Dettagli e prenotazioni</a>
             </div>
-
             <div class="hr"></div>
             <small>© GARER — Privacy/Cookie/Termini (da inserire).</small>
           </div>
@@ -140,6 +137,7 @@
         </div>
       </div>
     </section>
+
   </main>
 
   <script src="app.js"></script>
