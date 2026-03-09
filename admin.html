@@ -1,154 +1,251 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GARER — Scanner</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #05040a;
-      color: #fff;
-      font-family: system-ui, sans-serif;
-      min-height: 100svh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 32px 16px;
-    }
-    h1 { font-size: 28px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; margin-bottom: 8px; }
-    .subtitle { color: rgba(255,255,255,.45); font-size: 13px; margin-bottom: 32px; }
-
-    /* LOGIN — stesso stile admin */
-    .login-overlay {
-      position: fixed;
-      inset: 0;
-      background: #05040a;
-      z-index: 999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .login-box {
-      width: min(400px, 90vw);
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 18px;
-      padding: 24px;
-    }
-    .login-box h2 { margin: 0 0 6px; }
-    .hr { height: 1px; background: rgba(255,255,255,.10); margin: 14px 0; }
-
-    #scannerBox {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-      gap: 16px;
-    }
-    .user-chip { font-size: 13px; color: rgba(255,255,255,.4); }
-    #reader { width: min(340px, 90vw) !important; border-radius: 16px; overflow: hidden; }
-    #result {
-      width: min(340px, 90vw);
-      padding: 20px;
-      border-radius: 16px;
-      text-align: center;
-      font-size: 20px;
-      font-weight: 900;
-      line-height: 1.4;
-      display: none;
-    }
-    #result small { font-weight: 400; font-size: 14px; }
-    .ok    { background: rgba(0,200,100,.15); border: 2px solid rgba(0,200,100,.45); }
-    .error { background: rgba(255,50,50,.15);  border: 2px solid rgba(255,50,50,.45); }
-    .action-btn {
-      width: min(340px, 90vw);
-      padding: 14px;
-      border-radius: 14px;
-      border: none;
-      font-weight: 900;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    #resetBtn { background: linear-gradient(135deg, #9b00ff, #ff35d4); color: #fff; display: none; }
-    #logoutBtn { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.10); color: rgba(255,255,255,.6); font-size: 13px; padding: 10px; }
-    .btn--primary {
-      border-color: rgba(155,0,255,.35);
-      background: linear-gradient(135deg, rgba(155,0,255,.92), rgba(255,53,212,.70));
-      color: #fff;
-      padding: 10px 16px;
-      border-radius: 14px;
-      font-weight: 900;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      border: 1px solid rgba(155,0,255,.35);
-      font-size: 15px;
-    }
-  </style>
+  <title>GARER — Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="admin.css" />
 </head>
 <body>
 
-  <!-- LOGIN OVERLAY — identico ad admin -->
+
+  <!-- NAV -->
+  <header class="nav">
+    <div class="container nav__inner">
+      <a class="brand" href="index.html">
+        <div class="heroLogoWrap">
+          <img class="heroLogo" src="assets/garer_logo_1.png" alt="GARER logo" />
+        </div>
+      </a>
+      <span style="font-weight:900; color:var(--muted)">Admin Panel</span>
+      <button class="btn btn--primary" id="logoutBtn">Logout</button>
+    </div>
+  </header>
+
+
+  <!-- LOGIN OVERLAY -->
   <div id="loginOverlay" class="login-overlay">
-    <div class="login-box">
-      <h2 style="margin:0 0 6px">Staff Login</h2>
-      <small style="color:rgba(255,255,255,.5)">Accesso riservato allo staff GARER</small>
+  <div class="login-box card">
+    <div class="card__pad">
+      <h2 style="margin:0 0 6px">Admin Login</h2>
+      <small>Accesso riservato agli organizzatori</small>
       <div class="hr"></div>
-      <button class="btn--primary" id="loginBtn">
+      <button class="btn btn--primary" id="loginBtn" style="width:100%; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:10px">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" />
         Accedi con Google
       </button>
     </div>
   </div>
+</div>
 
-  <!-- SCANNER -->
-  <div id="scannerBox">
-    <p class="user-chip" id="userChip"></p>
-    <div id="reader"></div>
-    <div id="result"></div>
-    <button class="action-btn" id="resetBtn" onclick="resetScanner()">📷 Scansiona altro</button>
-    <button class="action-btn" id="logoutBtn">Esci</button>
+
+
+  <!-- ADMIN CONTENT (hidden until logged in) -->
+  <main class="admin-main" id="adminContent" style="display:none">
+    <!-- SEZIONE: PROSSIMO EVENTO -->
+    <section class="admin-section card">
+      <div class="card__pad">
+        <h2 class="section-title">🗓 Prossimo Evento</h2>
+        <small>Questi dati appaiono nella Home del sito.</small>
+        <div class="hr"></div>
+
+
+        <div class="fields-grid">
+          <div class="field">
+            <label>Nome Evento</label>
+            <input type="text" id="evtName" placeholder="es. Spring Break" />
+          </div>
+          <div class="field">
+            <label>Data (gg/mm/aa)</label>
+            <input type="text" id="evtDate" placeholder="es. 21/03/26" />
+          </div>
+          <div class="field full">
+            <label>Link WhatsApp / Biglietti</label>
+            <input type="url" id="evtLink" placeholder="https://chat.whatsapp.com/..." />
+          </div>
+          <div class="field full">
+            <label>Descrizione / Dettagli</label>
+            <textarea id="evtDesc" rows="3" placeholder="Dettagli serata, location, orari…"></textarea>
+          </div>
+          <div class="field full">
+            <label>URL Poster / Immagine evento</label>
+            <input type="url" id="evtImg" placeholder="https://... oppure assets/sample_evento.jpeg" />
+            <div id="evtImgPreview" class="img-preview"></div>
+          </div>
+        </div>
+
+
+        <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap">
+          <button class="btn btn--primary" id="saveEventBtn">💾 Salva Evento</button>
+          <button class="btn" id="resetEventBtn">↩ Ripristina Default</button>
+        </div>
+        <p id="eventSaveMsg" class="save-msg" style="display:none">✅ Evento salvato!</p>
+      </div>
+    </section>
+
+
+    <!-- SEZIONE: GALLERY JSON -->
+    <section class="admin-section card">
+      <div class="card__pad">
+        <h2 class="section-title">🖼 Gallery — Gestione Serate</h2>
+        <small>Aggiungi, modifica o rimuovi le serate dalla galleria.</small>
+        <div class="hr"></div>
+
+
+        <div id="galleryEditor"></div>
+
+
+        <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap">
+          <button class="btn btn--primary" id="addEventBtn">＋ Aggiungi Serata</button>
+          <button class="btn btn--primary" id="saveGalleryBtn">💾 Salva Gallery</button>
+          <button class="btn" id="resetGalleryBtn">↩ Ripristina Default</button>
+        </div>
+        <p id="gallerySaveMsg" class="save-msg" style="display:none">✅ Gallery salvata!</p>
+      </div>
+    </section>
+
+
+    <!-- SEZIONE: BIGLIETTI -->
+<section class="admin-section card">
+  <div class="card__pad">
+    <h2 class="section-title">🎟 Biglietti & QR</h2>
+    <small>Genera biglietti QR e controlla chi ha già usato il ticket.</small>
+    <div class="hr"></div>
+
+
+    <!-- Form generazione -->
+    <div class="fields-grid">
+      <div class="field">
+        <label>Nome Cognome</label>
+        <input type="text" id="bNome" placeholder="es. Mario Rossi" />
+      </div>
+      <div class="field">
+        <label>Evento</label>
+        <input type="text" id="bEvento" placeholder="es. Spring Break" />
+      </div>
+      <div class="field">
+        <label>Numero biglietti</label>
+        <input type="number" id="bQuantita" value="1" min="1" max="10" />
+      </div>
+      <div class="field" style="justify-content:flex-end">
+        <button class="btn btn--primary" id="generaBigliettoBtn" style="margin-top:auto">
+          ✨ Genera QR
+        </button>
+      </div>
+    </div>
+
+
+    <!-- Output QR generati -->
+    <div id="qrOutput" style="display:none; margin-top:20px">
+      <div class="hr"></div>
+      <p style="font-weight:900; margin:0 0 12px">QR Generati — salva screenshot e manda su WhatsApp</p>
+      <div id="qrCards" style="display:flex; flex-wrap:wrap; gap:16px"></div>
+    </div>
+
+
+    <div class="hr"></div>
+
+
+    <!-- Lista biglietti -->
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px">
+      <h3 style="margin:0">Lista Biglietti</h3>
+      <div style="display:flex; gap:8px; flex-wrap:wrap">
+        <button class="btn btn--sm" id="filtroTutti" class="active">Tutti</button>
+        <button class="btn btn--sm" id="filtroValidi">✅ Validi</button>
+        <button class="btn btn--sm" id="filtroUsati">⚠️ Usati</button>
+      </div>
+    </div>
+
+
+    <div id="bigliettiLista" style="margin-top:12px; display:flex; flex-direction:column; gap:8px">
+      <p style="color:var(--muted)">Caricamento...</p>
+    </div>
+
+
+    <div style="margin-top:12px">
+      <small id="bigliettiCount" style="color:var(--muted)"></small>
+    </div>
   </div>
+</section>
+
+
+  </main>
+
 
 <script type="module">
-import { initializeApp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, get, update }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { initializeApp }          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged }
+                                   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+
+// ── FIREBASE CONFIG ──────────────────────────────────────
 const firebaseConfig = {
+
+
   apiKey: "AIzaSyC5iX2PkWxSrbRObyPFzm2OIqPB8eed_0c",
   authDomain: "garer-777.firebaseapp.com",
   databaseURL: "https://garer-777-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "garer-777",
   storageBucket: "garer-777.firebasestorage.app",
   messagingSenderId: "353631922937",
-  appId: "1:353631922937:web:d61249d6997e86ce3e9028"
+  appId: "1:353631922937:web:d61249d6997e86ce3e9028",
+  measurementId: "G-FCV9FLE4VW"
+
+
 };
+
 
 const app      = initializeApp(firebaseConfig);
 const db       = getDatabase(app);
 const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-let scanning       = true;
-let scannerStarted = false;
 
-const loginOverlay = document.getElementById('loginOverlay');
-const scannerBox   = document.getElementById('scannerBox');
-const risultato    = document.getElementById('result');
-const resetBtn     = document.getElementById('resetBtn');
+// ── DEFAULT DATA ─────────────────────────────────────────
+const DEFAULT_EVENT = {
+  name: "PROSSIMA DATA GARER", date: "",
+  link: "https://chat.whatsapp.com/JvbMyrgzRMY821vF3Wt4Uu",
+  desc: "", img: "assets/sample_evento.jpeg"
+};
 
-// ── LOGIN — identico ad admin ─────────────────────────────
-document.getElementById('loginBtn').addEventListener('click', async () => {
+
+const DEFAULT_GALLERY = {
+  "Halloween Night": {
+    date: "03/10/25",
+    link: "https://drive.google.com/drive/folders/1DKl5iXO1iY7BD2zIvDxZuDovQdhMBJWK",
+    foto_evidenza: [
+      "https://drive.google.com/file/d/1XZBORvd-imrbRw_xmDc4BovfMx5UoL5F/view",
+      "https://drive.google.com/file/d/141uXwAXyfHeBnhm0v2QjhB152XVbNZ0q/view",
+      "https://drive.google.com/file/d/1np_f51YLGOMAW8swImX6ZS9MoxvqvRUN/view"
+    ]
+  },
+  "Spring Break": {
+    date: "22/01/26",
+    link: "https://drive.google.com/drive/folders/XXXXX4",
+    foto_evidenza: []
+  },
+  "21-02-2026": {
+    date: "21/02/26",
+    link: "https://drive.google.com/drive/folders/1arOXGxCaPtWRlCq_bJL2Hb16YSzcqFqN",
+    foto_evidenza: [
+      "https://drive.google.com/file/d/13Ckx39ks4U8WWn1TWUfn_wfyuH2OnV9L/view",
+      "https://drive.google.com/file/d/1tUXMFn6DTnNqU-Q9izKci104Hy08mohw/view",
+      "https://drive.google.com/file/d/1qq-YKMai3iQKqpBWopRlT9j4fnfD77tl/view"
+    ]
+  }
+};
+
+
+// ── AUTH ─────────────────────────────────────────────────
+const loginOverlay = document.getElementById("loginOverlay");
+const adminContent = document.getElementById("adminContent");
+const logoutBtn    = document.getElementById("logoutBtn");
+
+
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
   try {
     await signInWithPopup(auth, provider);
   } catch(e) {
@@ -157,98 +254,356 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
 
-// ── AUTH STATE — identico ad admin ───────────────────────
+logoutBtn.addEventListener("click", () => signOut(auth));
+
+
 onAuthStateChanged(auth, async user => {
-  if (!user) {
-    loginOverlay.style.display = 'flex';
-    scannerBox.style.display   = 'none';
-    return;
-  }
-
-  // Stessa logica admin: controlla emailKey su admins O scanner
-  const emailKey = user.email.replace(/\./g, '-');
-
-  try {
-    const [snapAdmin, snapScanner] = await Promise.all([
-      get(ref(db, `admins/${emailKey}`)),
-      get(ref(db, `scanner/${emailKey}`))
-    ]);
-
-    const autorizzato =
-      (snapAdmin.exists()   && snapAdmin.val()   === true) ||
-      (snapScanner.exists() && snapScanner.val() === true);
-
-    if (!autorizzato) {
-      await signOut(auth);
-      loginOverlay.style.display = 'flex';
-      scannerBox.style.display   = 'none';
-      alert('⛔ Account non autorizzato.');
-      return;
+  if (user) {
+    const emailKey = user.email.replace(/\./g, "-");
+    const snap = await get(ref(db, `admins/${emailKey}`));
+    if (snap.exists() && snap.val() === true) {
+      loginOverlay.style.display = "none";
+      adminContent.style.display = "flex";
+      loadEventForm();
+      loadGalleryEditor();
+      loadBiglietti();
+    } else {
+      signOut(auth);
+      loginOverlay.style.display = "flex";
+      adminContent.style.display = "none";
     }
-
-    // ✅ Autorizzato
-    loginOverlay.style.display = 'none';
-    scannerBox.style.display   = 'flex';
-    document.getElementById('userChip').textContent = `👤 ${user.email}`;
-
-    if (!scannerStarted) {
-      scannerStarted = true;
-      requestAnimationFrame(() => requestAnimationFrame(avviaScanner));
-    }
-
-  } catch(e) {
-    console.error(e);
-    alert('❌ Errore di connessione. Ricarica la pagina.');
+  } else {
+    loginOverlay.style.display = "flex";
+    adminContent.style.display = "none";
   }
 });
 
-// ── SCANNER ───────────────────────────────────────────────
-function avviaScanner() {
-  const scanner = new Html5QrcodeScanner(
-    "reader",
-    { fps: 10, qrbox: { width: 250, height: 250 } },
-    false
-  );
 
-  scanner.render(async (id) => {
-    if (!scanning) return;
-    scanning = false;
+// ── NEXT EVENT ───────────────────────────────────────────
+async function loadEventForm() {
+  let ev = DEFAULT_EVENT;
+  try {
+    const snap = await get(ref(db, 'nextEvent'));
+    if (snap.exists()) ev = snap.val();
+  } catch(e) { console.error(e); }
 
-    try {
-      const snap = await get(ref(db, `biglietti/${id}`));
 
-      if (!snap.exists()) {
-        mostraRisultato('error', `❌ Biglietto non trovato<br><small>${id}</small>`);
-      } else {
-        const dati = snap.val();
-        if (dati.usato) {
-          mostraRisultato('error', `⚠️ GIÀ USATO<br><small>${dati.nome} — ${dati.evento}</small>`);
-        } else {
-          await update(ref(db, `biglietti/${id}`), { usato: true });
-          mostraRisultato('ok', `✅ ACCESSO OK<br><small>${dati.nome} — ${dati.evento}</small>`);
-        }
-      }
-    } catch {
-      mostraRisultato('error', '❌ Errore connessione DB');
+  document.getElementById("evtName").value = ev.name || "";
+  document.getElementById("evtDate").value = ev.date || "";
+  document.getElementById("evtLink").value = ev.link || "";
+  document.getElementById("evtDesc").value = ev.desc || "";
+  document.getElementById("evtImg").value  = ev.img  || "";
+  updateImgPreview(ev.img);
+}
+
+
+document.getElementById("evtImg").addEventListener("input", e => updateImgPreview(e.target.value));
+
+
+function updateImgPreview(url) {
+  const box = document.getElementById("evtImgPreview");
+  box.innerHTML = url
+    ? `<img src="${url}" alt="Preview" onerror="this.style.display='none'" />`
+    : "";
+}
+
+
+document.getElementById("saveEventBtn").addEventListener("click", async () => {
+  const ev = {
+    name: document.getElementById("evtName").value.trim(),
+    date: document.getElementById("evtDate").value.trim(),
+    link: document.getElementById("evtLink").value.trim(),
+    desc: document.getElementById("evtDesc").value.trim(),
+    img:  document.getElementById("evtImg").value.trim()
+  };
+  try {
+    await set(ref(db, 'nextEvent'), ev);
+    showMsg("eventSaveMsg");
+  } catch(e) {
+    console.error(e);
+    alert("Errore nel salvataggio.");
+  }
+});
+
+
+document.getElementById("resetEventBtn").addEventListener("click", async () => {
+  await set(ref(db, 'nextEvent'), DEFAULT_EVENT);
+  await loadEventForm();
+});
+
+
+// ── GALLERY EDITOR ────────────────────────────────────────
+async function loadGalleryEditor() {
+  let gallery = DEFAULT_GALLERY;
+  try {
+    const snap = await get(ref(db, 'gallery'));
+    if (snap.exists()) {
+      gallery = snap.val();
+      Object.values(gallery).forEach(ev => {
+        if (ev.foto_evidenza && !Array.isArray(ev.foto_evidenza))
+          ev.foto_evidenza = Object.values(ev.foto_evidenza);
+        else if (!ev.foto_evidenza)
+          ev.foto_evidenza = [];
+      });
     }
+  } catch(e) { console.error(e); }
 
-    resetBtn.style.display = 'block';
+
+  const container = document.getElementById("galleryEditor");
+  container.innerHTML = "";
+  Object.entries(gallery).forEach(([name, data]) =>
+    container.appendChild(buildEventCard(name, data))
+  );
+}
+
+
+function buildEventCard(name, data) {
+  const card = document.createElement("div");
+  card.className = "gallery-event-card";
+  card.dataset.key = name;
+  card.innerHTML = `
+    <div class="card-header">
+      <span class="card-title">📅 ${name}</span>
+      <button class="btn btn--danger btn--sm" data-action="deleteEvent">🗑 Rimuovi</button>
+    </div>
+    <div class="fields-grid">
+      <div class="field">
+        <label>Nome Serata</label>
+        <input type="text" data-field="name" value="${name}" />
+      </div>
+      <div class="field">
+        <label>Data (gg/mm/aa)</label>
+        <input type="text" data-field="date" value="${data.date || ""}" />
+      </div>
+      <div class="field full">
+        <label>Link Google Drive</label>
+        <input type="url" data-field="link" value="${data.link || ""}" />
+      </div>
+    </div>
+    <div class="field full" style="padding:0 0 4px">
+      <label>Foto Evidenza (URL)</label>
+      <div class="foto-list" data-fotolist>
+        ${(data.foto_evidenza || []).map(url => fotoRow(url)).join("")}
+      </div>
+      <button class="btn btn--sm" data-action="addFoto" style="margin-top:8px; width:fit-content">＋ Aggiungi Foto</button>
+    </div>
+  `;
+
+
+  card.querySelector("[data-action='deleteEvent']").addEventListener("click", () => {
+    if (confirm(`Rimuovere la serata "${name}"?`)) card.remove();
+  });
+  card.querySelector("[data-action='addFoto']").addEventListener("click", () => {
+    card.querySelector("[data-fotolist]").insertAdjacentHTML("beforeend", fotoRow(""));
+    bindFotoRemove(card);
+  });
+  bindFotoRemove(card);
+  return card;
+}
+
+
+function fotoRow(url) {
+  return `<div class="foto-row">
+    <input type="url" placeholder="https://drive.google.com/..." value="${url}" />
+    <button class="btn btn--danger btn--sm" data-action="removeFoto">✕</button>
+  </div>`;
+}
+
+
+function bindFotoRemove(card) {
+  card.querySelectorAll("[data-action='removeFoto']").forEach(btn => {
+    btn.onclick = () => btn.closest(".foto-row").remove();
   });
 }
 
-function mostraRisultato(tipo, html) {
-  risultato.className     = tipo;
-  risultato.innerHTML     = html;
-  risultato.style.display = 'block';
+
+document.getElementById("addEventBtn").addEventListener("click", () => {
+  const name = prompt("Nome della nuova serata:");
+  if (!name || !name.trim()) return;
+  document.getElementById("galleryEditor")
+    .appendChild(buildEventCard(name.trim(), { date: "", link: "", foto_evidenza: [] }));
+});
+
+
+document.getElementById("saveGalleryBtn").addEventListener("click", async () => {
+  const gallery = {};
+  document.querySelectorAll(".gallery-event-card").forEach(card => {
+    const nameInput = card.querySelector("[data-field='name']");
+    const name = nameInput ? nameInput.value.trim() : card.dataset.key;
+    if (!name) return;
+    gallery[name] = {
+      date: card.querySelector("[data-field='date']")?.value.trim() || "",
+      link: card.querySelector("[data-field='link']")?.value.trim() || "",
+      foto_evidenza: [...card.querySelectorAll("[data-fotolist] input")]
+        .map(i => i.value.trim()).filter(Boolean)
+    };
+  });
+  try {
+    await set(ref(db, 'gallery'), gallery);
+    showMsg("gallerySaveMsg");
+  } catch(e) {
+    console.error(e);
+    alert("Errore nel salvataggio.");
+  }
+});
+
+
+document.getElementById("resetGalleryBtn").addEventListener("click", async () => {
+  if (confirm("Ripristinare la gallery ai valori di default?")) {
+    await set(ref(db, 'gallery'), DEFAULT_GALLERY);
+    await loadGalleryEditor();
+  }
+});
+// ── BIGLIETTI ────────────────────────────────────────────
+import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm";
+
+
+let tuttiBiglietti = {};
+let filtroAttivo = "tutti";
+
+
+async function loadBiglietti() {
+  try {
+    const snap = await get(ref(db, 'biglietti'));
+    tuttiBiglietti = snap.exists() ? snap.val() : {};
+  } catch { tuttiBiglietti = {}; }
+  renderBiglietti();
 }
 
-window.resetScanner = function() {
-  scanning                = true;
-  risultato.style.display = 'none';
-  resetBtn.style.display  = 'none';
+
+function renderBiglietti() {
+  const container = document.getElementById('bigliettiLista');
+  const entries   = Object.entries(tuttiBiglietti);
+
+
+  const filtered = entries.filter(([, b]) => {
+    if (filtroAttivo === 'validi') return !b.usato;
+    if (filtroAttivo === 'usati')  return  b.usato;
+    return true;
+  });
+
+
+  document.getElementById('bigliettiCount').textContent =
+    `${filtered.length} biglietti mostrati — ${entries.filter(([,b]) => b.usato).length} usati su ${entries.length} totali`;
+
+
+  if (!filtered.length) {
+    container.innerHTML = `<p style="color:var(--muted)">Nessun biglietto trovato.</p>`;
+    return;
+  }
+
+
+  container.innerHTML = filtered
+    .sort(([,a],[,b]) => (b.creato || 0) - (a.creato || 0))
+    .map(([id, b]) => `
+      <div class="biglietto-row ${b.usato ? 'usato' : 'valido'}">
+        <div class="biglietto-info">
+          <span class="biglietto-nome">${b.nome}</span>
+          <span class="biglietto-meta">
+            🎉 ${b.evento} &nbsp;·&nbsp;
+            🔑 ${id} &nbsp;·&nbsp;
+            📅 ${b.creato ? new Date(b.creato).toLocaleDateString('it-IT') : '—'}
+          </span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center">
+          <span class="biglietto-badge ${b.usato ? 'badge-usato' : 'badge-valido'}">
+            ${b.usato ? '⚠️ Usato' : '✅ Valido'}
+          </span>
+          <button class="btn btn--danger btn--sm" onclick="eliminaBiglietto('${id}')">🗑</button>
+        </div>
+      </div>
+    `).join('');
+}
+
+
+// Filtri
+document.getElementById('filtroTutti').addEventListener('click',  () => { filtroAttivo = 'tutti';  renderBiglietti(); });
+document.getElementById('filtroValidi').addEventListener('click', () => { filtroAttivo = 'validi'; renderBiglietti(); });
+document.getElementById('filtroUsati').addEventListener('click',  () => { filtroAttivo = 'usati';  renderBiglietti(); });
+
+
+// Elimina biglietto
+window.eliminaBiglietto = async (id) => {
+  if (!confirm(`Eliminare il biglietto ${id}?`)) return;
+  const { remove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+  await remove(ref(db, `biglietti/${id}`));
+  delete tuttiBiglietti[id];
+  renderBiglietti();
 };
+
+
+// Genera QR
+document.getElementById('generaBigliettoBtn').addEventListener('click', async () => {
+  const nome     = document.getElementById('bNome').value.trim();
+  const evento   = document.getElementById('bEvento').value.trim();
+  const quantita = parseInt(document.getElementById('bQuantita').value) || 1;
+
+
+  if (!nome || !evento) return alert("Inserisci nome ed evento");
+
+
+  const qrCards  = document.getElementById('qrCards');
+  const qrOutput = document.getElementById('qrOutput');
+  qrCards.innerHTML = '';
+  qrOutput.style.display = 'block';
+
+
+  for (let i = 0; i < quantita; i++) {
+    const id = crypto.randomUUID().slice(0,8).toUpperCase();
+
+
+    // Salva su Firebase
+    await set(ref(db, `biglietti/${id}`), {
+      nome,
+      evento,
+      usato: false,
+      creato: Date.now()
+    });
+
+
+    tuttiBiglietti[id] = { nome, evento, usato: false, creato: Date.now() };
+
+
+    // Crea card QR
+    const card = document.createElement('div');
+    card.className = 'qr-card';
+    card.innerHTML = `
+      <div id="qr-${id}"></div>
+      <p class="qr-card-nome">${nome}</p>
+      <p class="qr-card-event">${evento}</p>
+      <p class="qr-card-id">${id}</p>
+    `;
+    qrCards.appendChild(card);
+
+
+    // Genera QR
+    await QRCode.toCanvas(
+      document.createElement('canvas'),
+      id, { width: 150, margin: 1 }
+    ).then(canvas => {
+      document.getElementById(`qr-${id}`).appendChild(canvas);
+    });
+  }
+
+
+  renderBiglietti();
+});
+
+
+// Carica biglietti quando admin fa login
+// Aggiungi loadBiglietti() nella funzione showAdmin() esistente
+
+
+// ── UTILS ────────────────────────────────────────────────
+function showMsg(id) {
+  const el = document.getElementById(id);
+  el.style.display = "block";
+  setTimeout(() => el.style.display = "none", 3000);
+}
 </script>
+
+
+
 </body>
 </html>
