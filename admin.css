@@ -170,3 +170,54 @@ body{
   border-radius: 14px;
   display: block;
 }
+/* ── BIGLIETTI ── */
+.biglietto-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  flex-wrap: wrap;
+}
+
+.biglietto-row.usato {
+  border-color: rgba(255,60,60,.25);
+  background: rgba(255,60,60,.07);
+}
+
+.biglietto-row.valido {
+  border-color: rgba(0,200,100,.25);
+  background: rgba(0,200,100,.07);
+}
+
+.biglietto-info { display: flex; flex-direction: column; gap: 3px; }
+.biglietto-nome { font-weight: 900; font-size: 15px; }
+.biglietto-meta { font-size: 12px; color: var(--muted); }
+
+.biglietto-badge {
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.badge-valido { background: rgba(0,200,100,.2); color: #7fff7f; }
+.badge-usato  { background: rgba(255,60,60,.2);  color: #ff6060; }
+
+.qr-card {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 180px;
+}
+
+.qr-card-nome  { color: #111; font-weight: 900; font-size: 13px; text-align: center; }
+.qr-card-id    { color: #555; font-size: 11px; font-family: monospace; }
+.qr-card-event { color: #777; font-size: 11px; }

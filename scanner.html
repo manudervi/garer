@@ -167,28 +167,19 @@ onAuthStateChanged(auth, async user => {
     return;
   }
 
-  // Stessa logica admin: controlla emailKey su admins O scanner
   const emailKey = user.email.replace(/\./g, '-');
 
   try {
-    const [snapAdmin, snapScanner] = await Promise.all([
-      get(ref(db, `admins/${emailKey}`)),
-      get(ref(db, `scanner/${emailKey}`))
-    ]);
+    const snap = await get(ref(db, `admins/${emailKey}`));
 
-    const autorizzato =
-      (snapAdmin.exists()   && snapAdmin.val()   === true) ||
-      (snapScanner.exists() && snapScanner.val() === true);
-
-    if (!autorizzato) {
+    // Autorizzato se esiste nel nodo admins (true O false)
+    if (!snap.exists()) {
       await signOut(auth);
-      loginOverlay.style.display = 'flex';
-      scannerBox.style.display   = 'none';
       alert('⛔ Account non autorizzato.');
       return;
     }
 
-    // ✅ Autorizzato
+    // ✅ Esiste → può usare lo scanner
     loginOverlay.style.display = 'none';
     scannerBox.style.display   = 'flex';
     document.getElementById('userChip').textContent = `👤 ${user.email}`;
@@ -200,9 +191,10 @@ onAuthStateChanged(auth, async user => {
 
   } catch(e) {
     console.error(e);
-    alert('❌ Errore di connessione. Ricarica la pagina.');
+    alert('❌ Errore di connessione.');
   }
 });
+
 
 // ── SCANNER ───────────────────────────────────────────────
 function avviaScanner() {
